@@ -47,7 +47,19 @@ HARNESSES=(
 )
 
 say() { printf '%s\n' "$*"; }
-act() { [[ $DRY -eq 1 ]] && say "    would: $*" || eval "$@"; }
+
+# Runs a command, or prints it under --dry-run. Arguments stay a real argv, so a
+# path holding a space or a quote is passed through untouched. An earlier version
+# built a string and called eval, which broke on both.
+run() {
+  if [[ $DRY -eq 1 ]]; then
+    printf '    would:'
+    printf ' %q' "$@"
+    printf '\n'
+  else
+    "$@"
+  fi
+}
 
 if [[ $PRINT -eq 1 ]]; then
   # Paste target for any agent this script does not know. The markers matter:
@@ -83,11 +95,11 @@ for row in "${HARNESSES[@]}"; do
   # 1. skill
   if [[ -n "$skills" ]]; then
     if [[ $UNINSTALL -eq 1 ]]; then
-      [[ -d "$skills/dts" ]] && act "rm -rf '$skills/dts'" || say "    skill: absent"
+      [[ -d "$skills/dts" ]] && run rm -rf "$skills/dts" || say "    skill: absent"
     else
-      act "mkdir -p '$skills'"
-      act "rm -rf '$skills/dts'"
-      act "cp -r '$SRC/skills/dts' '$skills/dts'"
+      run mkdir -p "$skills"
+      run rm -rf "$skills/dts"
+      run cp -r "$SRC/skills/dts" "$skills/dts"
       say "    skill -> $skills/dts"
     fi
   else
@@ -97,14 +109,14 @@ for row in "${HARNESSES[@]}"; do
   # 2. rules block, between markers, never clobbering the file
   if [[ $UNINSTALL -eq 1 ]]; then
     if [[ -f "$mem" ]] && grep -qF "$BEGIN" "$mem"; then
-      act "python3 '$SRC/install.py' remove '$mem'"
+      run python3 "$SRC/install.py" remove "$mem"
       say "    rules removed from $mem"
     else
       say "    rules: not present"
     fi
   else
-    act "mkdir -p \"\$(dirname '$mem')\""
-    act "python3 '$SRC/install.py' write '$mem' '$SRC/rules/dts.md'"
+    run mkdir -p "$(dirname "$mem")"
+    run python3 "$SRC/install.py" write "$mem" "$SRC/rules/dts.md"
     say "    rules -> $mem"
   fi
 
@@ -112,11 +124,11 @@ for row in "${HARNESSES[@]}"; do
   if [[ "$style" == yes ]]; then
     dest="$HOME/.claude/output-styles"
     if [[ $UNINSTALL -eq 1 ]]; then
-      [[ -f "$dest/dts.md" ]] && act "rm -f '$dest/dts.md'" || true
+      [[ -f "$dest/dts.md" ]] && run rm -f "$dest/dts.md" || true
       say "    output style removed"
     else
-      act "mkdir -p '$dest'"
-      act "cp '$SRC/output-styles/dts.md' '$dest/dts.md'"
+      run mkdir -p "$dest"
+      run cp "$SRC/output-styles/dts.md" "$dest/dts.md"
       say "    output style -> $dest/dts.md"
       say "    activate it with /config -> Output style -> DTS"
     fi
