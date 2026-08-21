@@ -1,0 +1,11 @@
+[
+{"id":"ov01","cat":"overlay",
+ "q":"List the ways a database index can slow down writes.",
+ "must":["index","write|insert|update","cost|overhead|slow"]},
+{"id":"ov02","cat":"overlay",
+ "q":"Compare optimistic and pessimistic locking.",
+ "must":["optimistic","pessimistic","conflict|retry|lock"]},
+{"id":"ov03","cat":"overlay",
+ "q":"Write two sentences in Spanish explaining what a mutex does.",
+ "must":["mutex","\\b(el|la|un|una|que|de)\\b"]}
+]

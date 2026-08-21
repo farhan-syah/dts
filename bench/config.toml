@@ -1,0 +1,86 @@
+# Provider and model configuration for the DTS bench.
+#
+# Add a provider by adding a table here. No code change is needed when the
+# provider speaks one of the three supported protocols.
+#
+#   kind = "ollama"     native /api/chat
+#   kind = "openai"     /v1/chat/completions — also DeepSeek, Groq, Together,
+#                       OpenRouter, vLLM, LM Studio, and other compatible APIs
+#   kind = "anthropic"  /v1/messages
+#
+# api_key_env names an environment variable. Never put a key in this file.
+# Check what is reachable with:  ./providers.py
+
+[providers.ollama]
+kind = "ollama"
+base_url = "http://127.0.0.1:11434"
+
+[providers.anthropic]
+kind = "anthropic"
+base_url = "https://api.anthropic.com/v1"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[providers.openai]
+kind = "openai"
+base_url = "https://api.openai.com/v1"
+api_key_env = "OPENAI_API_KEY"
+
+[providers.deepseek]
+kind = "openai"
+base_url = "https://api.deepseek.com/v1"
+api_key_env = "DEEPSEEK_API_KEY"
+
+[providers.openrouter]
+kind = "openai"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[providers.groq]
+kind = "openai"
+base_url = "https://api.groq.com/openai/v1"
+api_key_env = "GROQ_API_KEY"
+
+[bench]
+# Models the bench writes answers with. Each is a full provider:model spec.
+models = [
+  "ollama:glm-5.2:cloud",
+  "ollama:deepseek-v4-pro:cloud",
+  "ollama:kimi-k3:cloud",
+]
+
+# Writing standards to compare. Each name maps to arms/<name>.txt.
+arms = ["baseline", "eli5", "caveman", "ste100", "dts"]
+
+[judge]
+# Axes each judge scores, 0-5 each. Drop any you do not need.
+# Known: correct, complete, usable, english
+axes = ["correct", "complete", "usable", "english"]
+
+# Judges score answers. Keep at least one judge that did not write the answers,
+# or self-preference bias inflates the writing model's own scores.
+models = [
+  "ollama:kimi-k3:cloud",
+  "ollama:deepseek-v4-pro:cloud",
+]
+
+[run]
+temperature = 0.2
+seed_base = 1000
+max_tokens = 4096
+timeout_s = 240
+jobs = 3
+
+[providers.claude]
+# Runs the local Claude Code CLI. No API key, uses your subscription instead.
+# `home` is an isolated HOME so your own memory file never reaches the model.
+kind = "claude-cli"
+command = "claude"
+home = "../out/.claude-home"
+
+[providers.claude-bare]
+# Replaces the Claude Code system prompt instead of appending to it. Measures the
+# model, not the agent. Use `claude` for the setup a user actually runs.
+kind = "claude-cli"
+command = "claude"
+home = "../out/.claude-home"
+system_mode = "replace"

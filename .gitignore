@@ -1,0 +1,15 @@
+# Benchmark output. Large, regenerable via ./runall.sh
+out/
+
+.claude
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
