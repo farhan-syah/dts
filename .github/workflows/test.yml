@@ -1,0 +1,86 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The README carries a pasteable copy of the rules. It drifts silently.
+      - name: README block matches rules/dts.md
+        run: python3 tools/sync-readme.py --check
+
+      - name: Markdown links resolve
+        run: python3 tools/links.py $(git ls-files '*.md')
+
+      # The standard has to survive its own audit, or it is advice, not a rule.
+      - name: Shipped prose passes the DTS lint
+        run: python3 bench/lint.py $(git ls-files "*.md")
+
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax
+        run: bash -n install.sh
+
+      - name: ShellCheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          shellcheck install.sh
+
+      # install.sh edits a global agent config. A dry run must never write.
+      - name: Dry run writes nothing
+        run: |
+          before=$(find "$HOME" -maxdepth 3 -name 'CLAUDE.md' -o -maxdepth 3 -name 'AGENTS.md' | sort)
+          ./install.sh --dry-run || true
+          after=$(find "$HOME" -maxdepth 3 -name 'CLAUDE.md' -o -maxdepth 3 -name 'AGENTS.md' | sort)
+          [ "$before" = "$after" ] || { echo "dry run created files"; exit 1; }
+
+      # A full install into a throwaway HOME, then a clean uninstall.
+      - name: Install and uninstall round trip
+        run: |
+          export HOME="$(mktemp -d)"
+          mkdir -p "$HOME/bin"
+          printf '#!/bin/sh\nexit 0\n' > "$HOME/bin/claude"
+          chmod +x "$HOME/bin/claude"
+          export PATH="$HOME/bin:$PATH"
+          printf '# my notes\nkeep this line\n' > "$HOME/.claude/CLAUDE.md" 2>/dev/null \
+            || { mkdir -p "$HOME/.claude"; printf '# my notes\nkeep this line\n' > "$HOME/.claude/CLAUDE.md"; }
+          ./install.sh --only claude
+          grep -q 'dts:start' "$HOME/.claude/CLAUDE.md"
+          test -f "$HOME/.claude/skills/dts/SKILL.md"
+          test -f "$HOME/.claude/output-styles/dts.md"
+          ./install.sh --only claude          # reinstall must not duplicate
+          [ "$(grep -c 'dts:start' "$HOME/.claude/CLAUDE.md")" = "1" ]
+          ./install.sh --only claude --uninstall
+          grep -q 'keep this line' "$HOME/.claude/CLAUDE.md"
+          ! grep -q 'dts:start' "$HOME/.claude/CLAUDE.md"
+          ! test -d "$HOME/.claude/skills/dts"

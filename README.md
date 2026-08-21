@@ -1,12 +1,24 @@
 # DTS — Dense Technical Syntax
 
-Your AI agent writes too much. This makes it write less, without making it worse.
+An always-on output policy for coding agents.
 
-Install once. From the next message, everything it writes gets tighter: replies, commit messages, PR bodies, code comments, docs, error strings.
+Your agent writes too much. This makes it write less everywhere it writes — replies, commit messages, PR bodies, code comments, docs, error strings — from one install, with nothing to invoke and nothing to remember.
 
-**Cuts output tokens 20% to 80%. Keeps 97% to 101% of the quality.**
+**Across the three model setups measured here, it cut output tokens 12% to 83% and held 96% to 101% of the judge score.**
 
-Every number here comes from a benchmark that ships in this repo. Run it on your own model.
+Three setups are not a law. Every number ships with the benchmark that produced it. Run it on your own model.
+
+## How it is built
+
+| Layer                      | Loaded     | Cost                        | Owns                                    |
+| -------------------------- | ---------- | --------------------------- | --------------------------------------- |
+| [Core rules](rules/dts.md) | every turn | ~1000 input tokens, cached  | every surface, always                   |
+| [Skill](skills/dts/)       | on demand  | nothing until called        | full spec, audits, per-artifact shapes  |
+| [Your overlays](overlays/) | every turn | yours                       | domain exceptions, other languages      |
+
+The core is small enough to leave on. Depth sits in the skill, which costs nothing until something calls it. Your exceptions sit in an overlay the installer never touches.
+
+That split is the point. A standard you have to invoke is a standard you forget.
 
 ## Why this exists
 
@@ -34,7 +46,7 @@ Whatever you forget stays full length.
 
 ### DTS takes the first deal and removes the cost
 
-| Approach   | Setup           | Quality /20 | Covers your docs and commits |
+| Approach   | Setup           | Judge /20 | Covers your docs and commits |
 | ---------- | --------------- | ----------- | ---------------------------- |
 | ELI5       | one prompt      | 14.5        | yes                          |
 | ASD-STE100 | one prompt      | 17.8        | yes                          |
@@ -140,7 +152,7 @@ Only Claude Code has an output style. Every other agent gets the same rules thro
 
 ## What you save
 
-Savings depend on your model. Quality does not.
+Savings depend on your model. In the three setups below, quality held.
 
 | Your setup                  | Before      | After | Saved    | Quality kept |
 | --------------------------- | ----------- | ----- | -------- | ------------ |
@@ -166,7 +178,7 @@ One model wrote 320 answers across 5 arms. A different model graded them on 4 th
 
 Every rival is the real thing people install, copied word for word: [Caveman](https://github.com/JuliusBrussee/caveman) and [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish). Versions are in [`bench/arms/PROVENANCE.md`](bench/arms/PROVENANCE.md).
 
-| Standard    | Tokens  | vs baseline | English /5 | Quality /20 | Cost per quality point | Made-up claims |
+| Standard    | Tokens  | vs baseline | English /5 | Judge /20 | Cost per point | False claims |
 | ----------- | ------- | ----------- | ---------- | ----------- | ---------------------- | -------------- |
 | No standard | 1001    | —           | 5.00       | 19.45       | 51.5                   | 0.53           |
 | **DTS**     | **171** | **-83%**    | **5.00**   | **18.77**   | **9.1**                | **0.23**       |
@@ -178,7 +190,9 @@ Two results stand out.
 
 **The English stays perfect.** 5.00, same as an agent with no rules at all. Caveman drops to 4.27 because it writes fragments.
 
-**It invents less.** 0.23 made-up claims per answer against the baseline's 0.53. Padding is where invention hides.
+**It invents less per answer.** 0.23 false claims against the baseline's 0.53.
+
+Read that one carefully. A shorter answer makes fewer claims, so it has fewer chances to be wrong. The count alone cannot separate "more careful" from "said less". [`report.py`](bench/report.py) also prints false claims per 1000 words and the share of answers holding at least one, which do separate them. Both are in the run output, not in this table, because no frozen run currently backs them.
 
 It loses on one thing: completeness, 4.23 against Caveman's 4.36. Caveman keeps a little more because it caps nothing.
 
@@ -235,6 +249,7 @@ Asked to explain a Rust move error, ASD-STE100 produced:
 | [`output-styles/dts.md`](output-styles/dts.md) | Chat style, Claude Code only.                          |
 | [`overlays/`](overlays/)                       | Templates for adding your own rules.                   |
 | [`bench/`](bench/)                             | The benchmark.                                         |
+| [`tests/`](tests/)                             | Unit tests. `python3 -m unittest discover -s tests`    |
 
 ## Turning it off, and adding your own rules
 
@@ -315,6 +330,8 @@ No model ever grades its own writing. Self-preference inflated one arm by roughl
 - Savings are not a property of the standard alone. They come from the standard, your model, and your harness together. Treat any single number, including the ones here, as one setup measured once.
 - The comparison used one writer model, glm-5.2. Two Claude Opus setups were added separately. Three setups show savings vary. They cannot predict a fourth.
 - The judges are language models. They are told that length is not quality, and two independent judges agreed on the ranking, but they are not people.
+- No confidence interval is reported, so a small gap is not a result. DTS scores 18.77 against Caveman's 17.94. That 0.83 is one judge model's mean over 64 answers. It has not been shown to exceed judge noise. The gap against ELI5 is 4.29 and is not in doubt.
+- Raw answers are not committed. `out/` is regenerable and stays out of the repo, so the tables here cannot be audited without rerunning against the same model version. Rerun before citing them.
 - The lint is regular expressions. It cannot see passive voice or parts of speech, so it undercounts.
 - 64 answers per arm, temperature 0.2, no runaway answers. An earlier 32-answer run was decided by a single answer that hit the token ceiling. Treat any single-run result as undecided.
 

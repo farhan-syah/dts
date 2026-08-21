@@ -40,7 +40,16 @@ def agg(rows):
         a["qmax"] = 5 * len(axes)
         qsum = sum(r["quality"] for r in jr)
         a["tpq"] = sum(r["out_tok"] for r in jr) / qsum if qsum else float("inf")
-        a["false"] = sum(len(r["judge"]["wrong_claims"]) for r in jr) / len(jr)
+        # A false-claim COUNT falls when an answer simply makes fewer claims, so
+        # a terse arm wins it for free. Two normalisations separate the two
+        # causes: per 1000 words removes the length effect, and the share of
+        # answers holding at least one false claim ignores volume entirely.
+        nfalse = sum(len(r["judge"]["wrong_claims"]) for r in jr)
+        words = sum(len(r.get("text", "").split()) for r in jr)
+        a["false"] = nfalse / len(jr)
+        a["false_kw"] = 1000.0 * nfalse / words if words else 0.0
+        a["false_any"] = 100.0 * sum(
+            1 for r in jr if r["judge"]["wrong_claims"]) / len(jr)
     return a
 
 
@@ -54,7 +63,8 @@ def table(title, groups, base_key, order):
     if judged:
         for k in axes:
             hdr += f"{k[:5]:>7}"
-        hdr += f"{'qual':>7}{'tok/qual':>10}{'eff':>8}{'false':>7}"
+        hdr += (f"{'qual':>7}{'tok/qual':>10}{'eff':>8}{'false':>7}"
+                f"{'f/kw':>7}{'f-any':>7}")
     print(hdr)
     for k in order:
         a = groups.get(k)
@@ -70,16 +80,19 @@ def table(title, groups, base_key, order):
                 for k in axes:
                     row += f"{a['ax'].get(k, 0):>7.2f}"
                 row += (f"{a['qual']:>7.2f}{a['tpq']:>10.1f}{e:>8}"
-                        f"{a['false']:>7.2f}")
+                        f"{a['false']:>7.2f}{a['false_kw']:>7.2f}"
+                        f"{a['false_any']:>6.0f}%")
             else:
-                row += f"{'-':>7}" * len(axes) + f"{'-':>7}{'-':>10}{'-':>8}{'-':>7}"
+                row += (f"{'-':>7}" * len(axes)
+                        + f"{'-':>7}{'-':>10}{'-':>8}{'-':>7}{'-':>7}{'-':>7}")
         print(row)
     print("  tok/fact = regex keyword coverage (weak: a bare noun counts).")
     if judged:
         print(f"  qual = {'+'.join(axes)}, 0-{5*len(axes)}.  "
               f"tok/qual = tokens per quality point (the real score).")
-        print("  eff  = tok/qual vs baseline; negative is better.  "
-              "false = mean false claims per answer.")
+        print("  eff  = tok/qual vs baseline; negative is better.")
+        print("  false = mean false claims per answer (rises with length).  "
+              "f/kw = per 1000 words.  f-any = answers with 1 or more.")
 
 
 def main():
