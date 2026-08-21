@@ -54,33 +54,59 @@ jobs:
       - name: ShellCheck
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
-          shellcheck install.sh
+          shellcheck install.sh bench/runall.sh bench/sync-arms.sh
 
-      # install.sh edits a global agent config. A dry run must never write.
+      # install.sh edits a user's global agent config, so every check below runs
+      # against a throwaway HOME holding a stub `claude` on PATH. Without the
+      # stub no harness is detected, install.sh exits early, and the checks pass
+      # by doing nothing.
       - name: Dry run writes nothing
         run: |
-          before=$(find "$HOME" -maxdepth 3 -name 'CLAUDE.md' -o -maxdepth 3 -name 'AGENTS.md' | sort)
-          ./install.sh --dry-run || true
-          after=$(find "$HOME" -maxdepth 3 -name 'CLAUDE.md' -o -maxdepth 3 -name 'AGENTS.md' | sort)
-          [ "$before" = "$after" ] || { echo "dry run created files"; exit 1; }
-
-      # A full install into a throwaway HOME, then a clean uninstall.
-      - name: Install and uninstall round trip
-        run: |
-          export HOME="$(mktemp -d)"
-          mkdir -p "$HOME/bin"
+          HOME="$(mktemp -d)"; export HOME
+          mkdir -p "$HOME/bin" "$HOME/.claude"
           printf '#!/bin/sh\nexit 0\n' > "$HOME/bin/claude"
           chmod +x "$HOME/bin/claude"
           export PATH="$HOME/bin:$PATH"
-          printf '# my notes\nkeep this line\n' > "$HOME/.claude/CLAUDE.md" 2>/dev/null \
-            || { mkdir -p "$HOME/.claude"; printf '# my notes\nkeep this line\n' > "$HOME/.claude/CLAUDE.md"; }
+          printf '# my notes\nkeep this line\n' > "$HOME/.claude/CLAUDE.md"
+          before="$(find "$HOME" | sort)"
+          ./install.sh --dry-run --only claude
+          after="$(find "$HOME" | sort)"
+          if [ "$before" != "$after" ]; then
+            echo "--dry-run changed the filesystem:"
+            diff <(printf '%s\n' "$before") <(printf '%s\n' "$after") || true
+            exit 1
+          fi
+          grep -q 'dts:start' "$HOME/.claude/CLAUDE.md" && {
+            echo "--dry-run wrote the rules block"; exit 1; }
+          echo "dry run touched nothing"
+
+      - name: Install, reinstall, uninstall round trip
+        run: |
+          HOME="$(mktemp -d)"; export HOME
+          mkdir -p "$HOME/bin" "$HOME/.claude"
+          printf '#!/bin/sh\nexit 0\n' > "$HOME/bin/claude"
+          chmod +x "$HOME/bin/claude"
+          export PATH="$HOME/bin:$PATH"
+          printf '# my notes\nkeep this line\n' > "$HOME/.claude/CLAUDE.md"
+
           ./install.sh --only claude
           grep -q 'dts:start' "$HOME/.claude/CLAUDE.md"
           test -f "$HOME/.claude/skills/dts/SKILL.md"
           test -f "$HOME/.claude/output-styles/dts.md"
+
           ./install.sh --only claude          # reinstall must not duplicate
-          [ "$(grep -c 'dts:start' "$HOME/.claude/CLAUDE.md")" = "1" ]
+          [ "$(grep -c 'dts:start' "$HOME/.claude/CLAUDE.md")" = 1 ]
+
           ./install.sh --only claude --uninstall
           grep -q 'keep this line' "$HOME/.claude/CLAUDE.md"
           ! grep -q 'dts:start' "$HOME/.claude/CLAUDE.md"
           ! test -d "$HOME/.claude/skills/dts"
+          ! test -f "$HOME/.claude/output-styles/dts.md"
+
+      # --print feeds a paste into any agent this script does not know.
+      - name: Print emits a complete marked block
+        run: |
+          ./install.sh --print > /tmp/block.md
+          grep -q '<!-- dts:start -->' /tmp/block.md
+          grep -q '<!-- dts:end -->' /tmp/block.md
+          diff <(sed '1d;$d' /tmp/block.md) rules/dts.md

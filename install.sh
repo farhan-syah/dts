@@ -95,7 +95,12 @@ for row in "${HARNESSES[@]}"; do
   # 1. skill
   if [[ -n "$skills" ]]; then
     if [[ $UNINSTALL -eq 1 ]]; then
-      [[ -d "$skills/dts" ]] && run rm -rf "$skills/dts" || say "    skill: absent"
+      if [[ -d "$skills/dts" ]]; then
+        run rm -rf "$skills/dts"
+        say "    skill removed"
+      else
+        say "    skill: absent"
+      fi
     else
       run mkdir -p "$skills"
       run rm -rf "$skills/dts"
@@ -124,8 +129,12 @@ for row in "${HARNESSES[@]}"; do
   if [[ "$style" == yes ]]; then
     dest="$HOME/.claude/output-styles"
     if [[ $UNINSTALL -eq 1 ]]; then
-      [[ -f "$dest/dts.md" ]] && run rm -f "$dest/dts.md" || true
-      say "    output style removed"
+      if [[ -f "$dest/dts.md" ]]; then
+        run rm -f "$dest/dts.md"
+        say "    output style removed"
+      else
+        say "    output style: absent"
+      fi
     else
       run mkdir -p "$dest"
       run cp "$SRC/output-styles/dts.md" "$dest/dts.md"
