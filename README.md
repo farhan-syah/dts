@@ -1,12 +1,73 @@
-# DTS — Dense Technical Syntax
+<h1 align="center">DTS — Dense Technical Syntax</h1>
+
+<p align="center">
+  <em>Makes your agent write shorter, without removing what you needed.</em>
+</p>
+
+<p align="center">
+  <a href="#install"><b>Install</b></a> &middot;
+  <a href="#before-and-after">See it</a> &middot;
+  <a href="rules/dts.md">The rules</a> &middot;
+  <a href="#how-it-compares">Numbers</a> &middot;
+  <a href="EXAMPLES.md">Examples</a> &middot;
+  <a href="MECHANISM.md">How it works</a> &middot;
+  <a href="BENCHMARK.md">Method</a>
+</p>
+
+---
 
 A writing standard for AI coding agents. It governs every surface the agent writes to — chat replies, commit messages, PR bodies, code comments, documentation, error strings — from one install, with nothing to invoke per task.
 
 Agent output has grown more verbose with each model generation. The available remedies trade brevity against content: an "explain like I'm five" prompt drops about 30% of the facts in an answer, and ASD-STE100 keeps its content but does not shorten the output.
 
-DTS retains 95% or more of the required facts. Output falls by a median of 10% on Claude Opus 5 and 83% on glm-5.2, and the spread per prompt is wide in both.
+DTS is a prompt. Paste it into your agent's instructions file, or into a new chat, and it applies from the next message.
 
-Every figure here comes from the benchmark in [`bench/`](bench/). How it works is in [MECHANISM.md](MECHANISM.md); how it was measured is in [BENCHMARK.md](BENCHMARK.md).
+<!-- dts:readme-start -->
+
+```markdown
+<!-- dts:start -->
+## Output Standard (DTS 1.0)
+
+Governs every English word this agent writes for engineers and agents: replies in conversation, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.
+
+Out of scope: any other language, fiction, persuasive or brand copy, and long-form argument such as a thesis, paper, essay, or legal text, where hedging and subordinate clauses are genre requirements. An overlay below this block names the handler that owns those.
+
+Override, per file: `<!-- dts:core -->` keeps the genre-neutral core and drops the sentence caps, the modal limit, and the bullets rule. `<!-- dts:off -->` disables everything. A project memory file and any text outside this block outrank these rules.
+
+- Compression removes filler, never content. Every fact the reader needs to act survives. When keeping a fact costs another sentence, write the sentence. Completeness never licenses hedging: an uncertain fact is stated as unconfirmed, never as `may`.
+- Protected content survives every cut: caveats, security constraints, edge cases, scope limits, and version requirements. These are never filler.
+- Answer first. No preamble, no restatement of the request, no closing recap.
+- One idea per sentence. At most 15 words for a directive, 20 for description. Shorter is always better. Split a longer thought into two sentences. Never drop the tail of it.
+- Active voice, simple tense, imperative for directives. Never `has been` / `have been`.
+- Modals: `can`, `will`, `must` only. Never `should` / `would` / `may` / `might` / `could`.
+- Bullets and tables for anything enumerable. Never a prose list. No semicolons. Open each item with the thing it names, never with the same verb repeated down the list.
+- Stop a list when the next row adds nothing the reader will act on. Never pad to look thorough. Never truncate mid-row. Past ten rows, the question is usually the wrong shape.
+- One word, one meaning. Canonical words are assigned, never chosen: `fetch` (network), `read` (disk), `modify`, `create`, `remove`, `run`, `directory`, `function`.
+- Three rotate most, so name the losers: `check` never verify/confirm/validate/ensure. `error` never failure/issue/problem. `config` never configuration/settings/options. Exempt: verbatim code identifiers, and terms with a distinct technical sense.
+- Ban: simply, just, easily, seamless, robust, powerful, comprehensive, crucial, vital, essential, leverage, utilize, delve, "it is worth noting", "that said". No hedge stacks — state the fact, or state that it is unconfirmed.
+- Reproduce code, paths, commands, identifiers, and error strings verbatim. Never paraphrase or re-case them.
+- Never re-output unchanged code. Edit an existing file in place — never rewrite it whole for a partial change. Never print back a file you just edited.
+- Brevity governs prose ONLY. Code in an edit must be complete — never `// ... existing code` or a stub placeholder.
+- An artifact with a required shape keeps every part. An error message names what failed, the exact input, and the next action.
+- Full rewrite, audit, or per-artifact shapes: invoke the `dts` skill.
+<!-- dts:end -->
+```
+
+<!-- dts:readme-end -->
+
+That is the whole standard. It works in a `CLAUDE.md`, an `AGENTS.md`, a Cursor rule, a `.clinerules` file, or pasted straight into a conversation.
+
+Keep the two markers. A later install updates the text between them in place instead of adding a second copy.
+
+### Or let the installer place it
+
+```sh
+git clone https://github.com/farhan-syah/dts && cd dts && ./install.sh
+```
+
+It finds every agent on your PATH and writes to each one's global file, so the standard applies in every project, to the main agent and to every subagent it delegates to. It also installs the skill and, on Claude Code, an output style.
+
+---
 
 ## Before and after
 
@@ -49,9 +110,11 @@ Left column is real unedited Claude Opus 5 output. Right column is the same mode
 
 87 words to 28, and 325 to 60. Both right-hand answers keep every fact the left one carries.
 
-DTS does not always cut this hard. Asked for a database error message it saves nine words, and spends them naming the exact config file and the command to recheck. Brevity is the method, not the goal.
+DTS does not always cut this hard. Asked for a database error message it saves only nine words, and uses them to name the exact config file and the command to run next. The goal is not a shorter answer. The goal is an answer with nothing wasted and nothing missing.
 
 More examples, every standard, complete replies: [EXAMPLES.md](EXAMPLES.md).
+
+---
 
 ## Why this exists
 
@@ -71,141 +134,39 @@ Commit messages and documentation stay at full length unless the matching skill 
 
 ### Where DTS sits
 
-| Approach   | Setup           | Judge /20 | Facts kept | Covers docs and commits   |
-| ---------- | --------------- | --------- | ---------- | ------------------------- |
-| ELI5       | one prompt      | 13.7      | 69.7%      | yes                       |
-| ASD-STE100 | one prompt      | 16.4      | 88.0%      | yes                       |
-| Caveman    | twenty skills   | 16.5      | 95.1%      | only when you invoke them |
+| Approach   | Setup           | Judge /20 | Facts kept | Covers docs and commits      |
+| ---------- | --------------- | --------- | ---------- | ---------------------------- |
+| ELI5       | one prompt      | 13.7      | 69.7%      | yes                          |
+| ASD-STE100 | one prompt      | 16.4      | 88.0%      | yes                          |
+| Caveman    | twenty skills   | 16.5      | 95.1%      | only when you invoke them    |
 | Concise    | one setting     | 19.2      | 97.3%      | main agent, Claude Code only |
 | **DTS**    | **one install** | **18.6**  | **95.1%**  | **main agent and subagents** |
-
-**Want fine control, per-task skills, and intensity levels?** Use [Caveman](https://github.com/JuliusBrussee/caveman).
 
 It is a good tool making a different bet: that you want to steer. On Claude Opus it is also about 5-7% cheaper than DTS on raw tokens.
 
 It depends, if you want that final 5-7% for reduced quality.
 
+---
+
 ## Install
 
 ```sh
-git clone https://github.com/farhan-syah/dts
-cd dts
-./install.sh
+git clone https://github.com/farhan-syah/dts && cd dts && ./install.sh
 ```
 
-It finds every agent on your PATH and installs into each.
+It detects every agent on your PATH and writes to each one's global file.
 
-It writes to each agent's global file, so DTS applies in every project.
+|                            |                                                     |
+| -------------------------- | --------------------------------------------------- |
+| `./install.sh --list`      | what it found, and where it will write              |
+| `./install.sh --dry-run`   | show every change, touch nothing                    |
+| `./install.sh --project`   | rule files for editors that read them from the repo |
+| `./install.sh --print`     | the block, to paste anywhere else                   |
+| `./install.sh --uninstall` | remove it cleanly                                   |
 
-| Agent       | Skill | Rules | Output style |
-| ----------- | ----- | ----- | ------------ |
-| Claude Code | yes   | yes   | yes          |
-| Codex       | yes   | yes   | —            |
-| opencode    | yes   | yes   | —            |
-| pi          | yes   | yes   | —            |
-| Gemini CLI  | —     | yes   | —            |
-| Copilot CLI | —     | yes   | —            |
-| Amp         | —     | yes   | —            |
-| Kiro        | —     | yes   | —            |
+Per-agent paths, project rules, and the agents that need a manual paste: [INSTALL.md](INSTALL.md).
 
-On Claude Code, turn on the output style: `/config`, then Output style, then DTS.
-
-```sh
-./install.sh --list        # what it found, and where it will write
-./install.sh --dry-run     # show every change, touch nothing
-./install.sh --only codex  # one agent
-./install.sh --uninstall   # remove it cleanly
-```
-
-### Editors that read rules from the repo
-
-Cursor, Windsurf, Cline, Qoder and Kiro keep their rules inside the project. Zed, Amp, Jules, Junie, Antigravity and CodeWhale read `AGENTS.md` from the repo root.
-
-```sh
-./install.sh --project           # write into the current repo
-./install.sh --project ~/code/x  # or another one
-./install.sh --project --all     # every target, not only the ones detected
-```
-
-It writes `AGENTS.md` always, and a rule file for each editor the repo already uses:
-
-| Editor   | File                              |
-| -------- | --------------------------------- |
-| Cursor   | `.cursor/rules/dts.mdc`           |
-| Windsurf | `.windsurf/rules/dts.md`          |
-| Cline    | `.clinerules/dts.md`              |
-| Qoder    | `.qoder/rules/dts.md`             |
-| Kiro     | `.kiro/steering/dts.md`           |
-| Copilot  | `.github/copilot-instructions.md` |
-
-Without `--all` it skips any editor whose directory is absent, so a repo does not collect rule files for editors nobody there runs. The Cursor file gets `alwaysApply: true` so it loads unprompted.
-
-DTS is plain text with no runtime. That is why one file covers every agent above, and why nothing here needs Node, a plugin host, or a hook.
-
-**Your memory file is safe.** The rules go between `<!-- dts:start -->` and `<!-- dts:end -->`. Nothing outside those markers is read or changed, so your own notes survive every reinstall.
-
-The skill also installs through the Agent Skills tool:
-
-```sh
-npx skills add farhan-syah/dts
-```
-
-### Any other agent
-
-If your agent is not in the table, it almost certainly reads a global instructions file. Copy this into it:
-
-<!-- dts:readme-start -->
-
-```markdown
-<!-- dts:start -->
-
-## Output Standard (DTS 1.0)
-
-Governs every English word this agent writes for engineers and agents: replies in conversation, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.
-
-Out of scope: any other language, fiction, persuasive or brand copy, and long-form argument such as a thesis, paper, essay, or legal text, where hedging and subordinate clauses are genre requirements. An overlay below this block names the handler that owns those.
-
-Override, per file: `<!-- dts:core -->` keeps the genre-neutral core and drops the sentence caps, the modal limit, and the bullets rule. `<!-- dts:off -->` disables everything. A project memory file and any text outside this block outrank these rules.
-
-- Compression removes filler, never content. Every fact the reader needs to act survives. When keeping a fact costs another sentence, write the sentence. Completeness never licenses hedging: an uncertain fact is stated as unconfirmed, never as `may`.
-- Protected content survives every cut: caveats, security constraints, edge cases, scope limits, and version requirements. These are never filler.
-- Answer first. No preamble, no restatement of the request, no closing recap.
-- One idea per sentence. At most 15 words for a directive, 20 for description. Shorter is always better. Split a longer thought into two sentences. Never drop the tail of it.
-- Active voice, simple tense, imperative for directives. Never `has been` / `have been`.
-- Modals: `can`, `will`, `must` only. Never `should` / `would` / `may` / `might` / `could`.
-- Bullets and tables for anything enumerable. Never a prose list. No semicolons. Open each item with the thing it names, never with the same verb repeated down the list.
-- Stop a list when the next row adds nothing the reader will act on. Never pad to look thorough. Never truncate mid-row. Past ten rows, the question is usually the wrong shape.
-- One word, one meaning. Canonical words are assigned, never chosen: `fetch` (network), `read` (disk), `modify`, `create`, `remove`, `run`, `directory`, `function`.
-- Three rotate most, so name the losers: `check` never verify/confirm/validate/ensure. `error` never failure/issue/problem. `config` never configuration/settings/options. Exempt: verbatim code identifiers, and terms with a distinct technical sense.
-- Ban: simply, just, easily, seamless, robust, powerful, comprehensive, crucial, vital, essential, leverage, utilize, delve, "it is worth noting", "that said". No hedge stacks — state the fact, or state that it is unconfirmed.
-- Reproduce code, paths, commands, identifiers, and error strings verbatim. Never paraphrase or re-case them.
-- Never re-output unchanged code. Edit an existing file in place — never rewrite it whole for a partial change. Never print back a file you just edited.
-- Brevity governs prose ONLY. Code in an edit must be complete — never `// ... existing code` or a stub placeholder.
-- An artifact with a required shape keeps every part. An error message names what failed, the exact input, and the next action.
-- Full rewrite, audit, or per-artifact shapes: invoke the `dts` skill.
-<!-- dts:end -->
-```
-
-<!-- dts:readme-end -->
-
-Append it to whichever file your agent loads. `./install.sh --print` writes the same block to stdout if you would rather pipe it.
-
-| Agent         | File                           |
-| ------------- | ------------------------------ |
-| Claude Code   | `~/.claude/CLAUDE.md`          |
-| Codex         | `~/.codex/AGENTS.md`           |
-| opencode      | `~/.config/opencode/AGENTS.md` |
-| pi            | `~/.pi/agent/AGENTS.md`        |
-| Gemini CLI    | `~/.gemini/GEMINI.md`          |
-| anything else | its global instructions file   |
-
-There is no shared file across agents. Each reads its own path, so the block goes in each one you use.
-
-**Keep the `<!-- dts:start -->` and `<!-- dts:end -->` markers.** A later `./install.sh` updates the text between them in place. Without them you get a second copy, and the two drift apart.
-
-Everything you write outside the markers is yours. The installer never reads it.
-
-Only Claude Code has an output style. Every other agent gets the same rules through its instructions file, which covers replies as well as files.
+---
 
 ## What you save
 
@@ -218,15 +179,17 @@ Savings depend on your model and on what you asked. Quality held in both setups.
 
 A model that pads gets padding removed, everywhere. Opus already writes densely, so the result depends on the request:
 
-| On Opus, DTS cuts | On Opus, DTS adds |
-| ----------------- | ----------------- |
+| On Opus, DTS cuts                                     | On Opus, DTS adds                                     |
+| ----------------------------------------------------- | ----------------------------------------------------- |
 | design -25%, enumerate -22%, debug -22%, compare -20% | error messages +25%, quick answers +8%, decisions +8% |
 
 Long answers compress. Short ones do not, and DTS spends words there on the contrast cases and exact commands a bare model leaves out. The incident update above ran -85% on Opus. A one-line lookup runs positive.
 
-Quote a single percentage for a model and you have measured one prompt.
+One percentage per model is not enough. How much you save depends on what you ask for.
 
 Inside an agent loop the answer is different: prose falls about 14% and the bill does not move, because output is under 1% of the tokens a session spends. [The detail](MECHANISM.md#inside-an-agent-loop).
+
+---
 
 ## How it compares
 
@@ -266,11 +229,15 @@ Three results are worth reading closely.
 
 Method, estimators and limits: [BENCHMARK.md](BENCHMARK.md).
 
+---
+
 ## The rules
 
 15 rules, in [`rules/dts.md`](rules/dts.md). The full text is in the paste block above.
 
 The layers, and how DTS reaches subagents: [MECHANISM.md](MECHANISM.md).
+
+---
 
 ## What ships
 
@@ -283,8 +250,11 @@ The layers, and how DTS reaches subagents: [MECHANISM.md](MECHANISM.md).
 | [`bench/`](bench/)                             | The benchmark, conversational and agentic.             |
 | [MECHANISM.md](MECHANISM.md)                   | How it works, and why the saving varies by model.      |
 | [BENCHMARK.md](BENCHMARK.md)                   | Method, estimators, and what it does not prove.        |
+| [INSTALL.md](INSTALL.md)                       | Per-agent paths, project rules, manual paste.          |
 | [EXAMPLES.md](EXAMPLES.md)                     | Full unedited replies from every standard.             |
 | [`tests/`](tests/)                             | Unit tests. `python3 -m unittest discover -s tests`    |
+
+---
 
 ## Turning it off, and adding your own rules
 
@@ -309,6 +279,8 @@ Add your own rules below the DTS block in your memory file. The installer never 
 ```
 
 Say which rule you are changing. A silent contradiction reads as a mistake. [`overlays/README.md`](overlays/README.md) walks through it.
+
+---
 
 ## License
 

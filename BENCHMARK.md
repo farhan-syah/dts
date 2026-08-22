@@ -75,7 +75,7 @@ Token counts show what an answer cost. They do not show whether your agent follo
 | Concise     | 1.05                      |
 | No standard | 1.63                      |
 
-DTS and ASD-STE100 sit level here, at 0.18 and 0.19, and they score 18.62 and 16.36 on the benchmark. Obeying a rule set is not the same as the rule set being worth obeying.
+DTS and ASD-STE100 sit level here, at 0.18 and 0.19. On the benchmark they score 18.62 and 16.36. Following the rules closely does not make the rules good.
 
 Concise scores 1.05, above ELI5, and still wins the quality table. Its rules are not DTS's rules. This measures distance from the DTS grammar, never how well an arm followed its own.
 

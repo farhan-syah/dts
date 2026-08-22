@@ -12,7 +12,7 @@ The parts, what each one costs, and why the saving depends on your model.
 
 The core is small enough to leave on. Depth sits in the skill, which costs nothing until something calls it. Your exceptions sit in an overlay the installer never touches.
 
-That split is the point. A standard you have to invoke is a standard you forget.
+That split is the point. If you have to remember to turn a standard on, you will forget.
 
 The rules layer is why DTS reaches subagents. Claude Code loads every level of the `CLAUDE.md` hierarchy into a subagent's context. An output style does not travel, because a subagent runs its own system prompt. DTS installs as both, so a delegated agent writes to the same standard as the one that delegated to it. The built-in `Explore` and `Plan` agents skip memory files by design and are the exception.
 
@@ -40,7 +40,7 @@ Ask glm-5.2 to explain processes and threads. It opens with a house-and-tenant a
 
 Expect the high end on a smaller or older model. Expect the low end on a frontier model that already writes tightly.
 
-Measured on 50 prompts with the model bare, Opus cuts output on 34 of them. The median prompt falls 10%, the best falls 49%, and the worst rises 57%. Fact retention goes up, from 95.9% to 97.8%. The split is by request, not by luck. Design, enumeration, debugging and comparison answers fall 20% to 25%. Error messages rise 25%, and short lookups rise 8%. Asked whether `git revert` rewrites history, Opus under DTS writes more. The standard asks for the contrast cases a bare model omits.
+Measured on 50 prompts with the model bare, Opus cuts output on 34 of them. The median prompt falls 10%, the best falls 49%, and the worst rises 57%. Fact retention goes up, from 95.9% to 97.8%. Which way it goes depends on what you ask for. Design, enumeration, debugging and comparison answers fall 20% to 25%. Error messages rise 25%, and short lookups rise 8%. Asked whether `git revert` rewrites history, Opus under DTS writes more. The standard asks for the contrast cases a bare model omits.
 
 On glm-5.2 there is no such split. Every one of the 50 prompts got shorter, the median by 83%.
 
