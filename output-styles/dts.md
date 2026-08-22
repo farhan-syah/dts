@@ -1,6 +1,6 @@
 ---
 name: DTS
-description: Dense Technical Syntax — max signal per token
+description: Dense Technical Syntax — technical prose with filler removed and every fact kept
 keep-coding-instructions: true
 ---
 
