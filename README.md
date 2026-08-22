@@ -28,7 +28,6 @@ Agent output has grown more verbose with each model generation. The available re
 
 ```markdown
 <!-- dts:start -->
-
 ## Output Standard (DTS 0.1)
 
 Governs every English word this agent writes for engineers and agents: replies in conversation, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.
@@ -79,7 +78,7 @@ It finds every agent on your PATH and writes to each one's global file, so the s
 Left column is real unedited Claude Opus 5 output. Right column is the same model with DTS as its system prompt. Nothing else loaded, nothing truncated.
 
 <table>
-<tr><th width="50%">README opening — 587 tokens</th><th width="50%">with DTS — 445 tokens</th></tr>
+<tr><th width="50%">README opening — 87 words</th><th width="50%">with DTS — 28 words</th></tr>
 <tr>
 <td valign="top">
 
@@ -92,7 +91,7 @@ Left column is real unedited Claude Opus 5 output. Right column is the same mode
 
 </td>
 </tr>
-<tr><th width="50%">Incident update — 830 tokens</th><th width="50%">with DTS — 128 tokens</th></tr>
+<tr><th width="50%">Incident update — 325 words</th><th width="50%">with DTS — 60 words</th></tr>
 <tr>
 <td valign="top">
 
@@ -113,9 +112,9 @@ Left column is real unedited Claude Opus 5 output. Right column is the same mode
 </tr>
 </table>
 
-87 words to 28, and 325 to 60. Both right-hand answers keep every fact the left one carries.
+Both right-hand answers keep every fact the left one carries.
 
-DTS does not always cut this hard. Asked for a database error message it saves only nine words, and uses them to name the exact config file and the command to run next. The goal is not a shorter answer. The goal is an answer with nothing wasted and nothing missing.
+DTS does not always cut this hard. Asked for a database error message it saves only nine words, and uses them to name the exact config file and the command to run next. The goal is an answer with nothing wasted and nothing missing.
 
 More examples, every standard, complete replies: [EXAMPLES.md](EXAMPLES.md).
 
@@ -177,10 +176,12 @@ Per-agent paths, project rules, and the agents that need a manual paste: [INSTAL
 
 Savings depend on your model and on what you asked. Quality held in both setups.
 
-| Your setup          | Median cut | Range across 50 prompts | Cuts output on | Facts kept |
+| Your setup          | Median cut, per prompt | Range across 50 prompts | Cuts output on | Facts kept |
 | ------------------- | ---------- | ----------------------- | -------------- | ---------- |
 | glm-5.2             | **-83%**   | -95% to -36%            | 50 of 50       | 95.1%      |
-| Claude Opus 5, bare | **-10%**   | -49% to **+57%**        | 34 of 50       | **97.8%**  |
+| Claude Opus 5, bare | **-10%**   | -49% to **+57%**        | 34 of 50       | **97.7%**  |
+
+Both rows take the median of the per-prompt change. The comparison table below divides one arm's median by the baseline's, so the two are not the same estimator. Pooled that way, Opus reads -17%.
 
 A model that pads gets padding removed, everywhere. Opus already writes densely, so the result depends on the request:
 
@@ -188,7 +189,7 @@ A model that pads gets padding removed, everywhere. Opus already writes densely,
 | ----------------------------------------------------- | ----------------------------------------------------- |
 | design -25%, enumerate -22%, debug -22%, compare -20% | error messages +25%, quick answers +8%, decisions +8% |
 
-Long answers compress. Short ones do not, and DTS spends words there on the contrast cases and exact commands a bare model leaves out. The incident update above ran -85% on Opus. A one-line lookup runs positive.
+Long answers compress. Short ones do not, and DTS spends words there on the contrast cases and exact commands a bare model leaves out. The incident update above ran -82% on Opus. A one-line lookup runs positive.
 
 One percentage per model is not enough. How much you save depends on what you ask for.
 

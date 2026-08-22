@@ -6,6 +6,8 @@ Real unedited output from Claude Opus 5. Each standard is the entire system prom
 
 No route to a Claude model accepts a seed, so these are single samples and cannot be reproduced exactly.
 
+Counts are words of visible reply. These runs went through OpenRouter, which bills reasoning tokens inside the output count, so a token figure here would measure thinking the reader never sees.
+
 ```sh
 cd bench
 ./bench.py --model openrouter:anthropic/claude-opus-5 \
@@ -19,19 +21,19 @@ Explain the difference between a process and a thread.
 ```
 
 <table>
-<tr><th>Standard</th><th>Tokens</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
-<tr><td>No standard</td><td align="right">1409</td><td align="right">&mdash;</td><td align="center">5/5</td><td>nothing</td></tr>
-<tr><td>ASD-STE100</td><td align="right">1774</td><td align="right">+26%</td><td align="center">5/5</td><td>nothing</td></tr>
-<tr><td>ELI5</td><td align="right">441</td><td align="right">-69%</td><td align="center">4/5</td><td>scheduling</td></tr>
-<tr><td>Concise</td><td align="right">478</td><td align="right">-66%</td><td align="center">4/5</td><td>scheduling</td></tr>
-<tr><td><b>DTS</b></td><td align="right">508</td><td align="right">-64%</td><td align="center"><b>5/5</b></td><td>nothing</td></tr>
-<tr><td>Caveman</td><td align="right">420</td><td align="right">-70%</td><td align="center">4/5</td><td>scheduling</td></tr>
+<tr><th>Standard</th><th>Words</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
+<tr><td>No standard</td><td align="right">573</td><td align="right">&mdash;</td><td align="center">5/5</td><td>nothing</td></tr>
+<tr><td>ASD-STE100</td><td align="right">362</td><td align="right">-37%</td><td align="center">5/5</td><td>nothing</td></tr>
+<tr><td>ELI5</td><td align="right">174</td><td align="right">-70%</td><td align="center">4/5</td><td>scheduling</td></tr>
+<tr><td>Concise</td><td align="right">217</td><td align="right">-62%</td><td align="center">4/5</td><td>scheduling</td></tr>
+<tr><td><b>DTS</b></td><td align="right">233</td><td align="right">-59%</td><td align="center"><b>5/5</b></td><td>nothing</td></tr>
+<tr><td>Caveman</td><td align="right">171</td><td align="right">-70%</td><td align="center">4/5</td><td>scheduling</td></tr>
 </table>
  
 ### Side by side
-
+ 
 <table>
-<tr><th width="50%">No standard — 1409 tokens</th><th width="50%">DTS — 508 tokens</th></tr>
+<tr><th width="50%">No standard — 573 words</th><th width="50%">DTS — 233 words</th></tr>
 <tr>
 <td valign="top">
 
@@ -122,7 +124,7 @@ Edge cases:
 <details>
 <summary>Every reply in full, raw</summary>
 
-**No standard** — 1409 tokens
+**No standard** — 573 words
 
 ```markdown
 ## The short version
@@ -180,7 +182,7 @@ Because threads _do_ share memory, they're fast to coordinate but require discip
 - **Modern practice often mixes both.** A typical web server runs N worker processes (one per core, for isolation and GIL avoidance), each with a thread pool or event loop inside.
 ```
 
-**ASD-STE100** — 1774 tokens
+**ASD-STE100** — 362 words
 
 ```markdown
 ## Process
@@ -212,7 +214,7 @@ Processes give better isolation. An error in one process does not damage the mem
 On Linux, the kernel schedules processes and threads as tasks of the same kind. The difference is the set of resources that the tasks share. Two threads share one memory space, and two processes do not.
 ```
 
-**ELI5** — 441 tokens
+**ELI5** — 174 words
 
 ```markdown
 **Process = a whole kitchen.**
@@ -240,7 +242,7 @@ One crash in a kitchen burns down that kitchen only. One bad cook can ruin the w
 That's it. Go rest.
 ```
 
-**Concise** — 478 tokens
+**Concise** — 217 words
 
 ```markdown
 A **process** is an independent program in execution with its own private address space; a **thread** is a unit of execution _inside_ a process, sharing that address space with sibling threads.
@@ -263,7 +265,7 @@ A **process** is an independent program in execution with its own private addres
 Linux blurs the line: both are `task_struct`s created by `clone()`; threads are just tasks that share memory, FDs, and signal handlers via flags like `CLONE_VM`.
 ```
 
-**DTS** — 508 tokens
+**DTS** — 233 words
 
 ```markdown
 A process owns its own memory space. A thread runs inside a process and shares that space with sibling threads.
@@ -290,7 +292,7 @@ Edge cases:
 - Green threads and coroutines are scheduled in userspace. The kernel sees one thread, so a blocking syscall stalls all of them.
 ```
 
-**Caveman** — 420 tokens
+**Caveman** — 171 words
 
 ```markdown
 **Process** = own memory space. OS gives it virtual address space, file descriptors, PID.
@@ -322,19 +324,19 @@ Write the error message a user sees when their config file has an invalid port n
 ```
 
 <table>
-<tr><th>Standard</th><th>Tokens</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
-<tr><td>No standard</td><td align="right">793</td><td align="right">&mdash;</td><td align="center">4/4</td><td>nothing</td></tr>
-<tr><td>ASD-STE100</td><td align="right">1058</td><td align="right">+33%</td><td align="center">4/4</td><td>nothing</td></tr>
-<tr><td>ELI5</td><td align="right">480</td><td align="right">-39%</td><td align="center">4/4</td><td>nothing</td></tr>
-<tr><td>Concise</td><td align="right">378</td><td align="right">-52%</td><td align="center">4/4</td><td>nothing</td></tr>
-<tr><td><b>DTS</b></td><td align="right">386</td><td align="right">-51%</td><td align="center"><b>4/4</b></td><td>nothing</td></tr>
-<tr><td>Caveman</td><td align="right">292</td><td align="right">-63%</td><td align="center">4/4</td><td>nothing</td></tr>
+<tr><th>Standard</th><th>Words</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
+<tr><td>No standard</td><td align="right">254</td><td align="right">&mdash;</td><td align="center">4/4</td><td>nothing</td></tr>
+<tr><td>ASD-STE100</td><td align="right">287</td><td align="right">+13%</td><td align="center">4/4</td><td>nothing</td></tr>
+<tr><td>ELI5</td><td align="right">108</td><td align="right">-57%</td><td align="center">4/4</td><td>nothing</td></tr>
+<tr><td>Concise</td><td align="right">122</td><td align="right">-52%</td><td align="center">4/4</td><td>nothing</td></tr>
+<tr><td><b>DTS</b></td><td align="right">153</td><td align="right">-40%</td><td align="center"><b>4/4</b></td><td>nothing</td></tr>
+<tr><td>Caveman</td><td align="right">108</td><td align="right">-57%</td><td align="center">4/4</td><td>nothing</td></tr>
 </table>
 
 ### Side by side
 
 <table>
-<tr><th width="50%">No standard — 793 tokens</th><th width="50%">DTS — 386 tokens</th></tr>
+<tr><th width="50%">No standard — 254 words</th><th width="50%">DTS — 153 words</th></tr>
 <tr>
 <td valign="top">
 
@@ -427,7 +429,7 @@ Two variants if your port rule is stricter:
 <details>
 <summary>Every reply in full, raw</summary>
 
-**No standard** — 793 tokens
+**No standard** — 254 words
 
 ````markdown
 **Primary error message**
@@ -488,7 +490,7 @@ Error: missing value for 'port' in config.yaml (line 14)
 If you tell me the language/framework, I can match your existing error conventions (e.g. Go's `fmt.Errorf` wrapping, Rust's `thiserror` + `miette` diagnostics, or Python's `pydantic` ValidationError formatting).
 ````
 
-**ASD-STE100** — 1058 tokens
+**ASD-STE100** — 287 words
 
 ````markdown
 **Primary message (value is not in the permitted range):**
@@ -535,7 +537,7 @@ Removed items and the reason for each:
 The file path, the line number, and the key name `"port"` are technical names. They stay exact, and each counts as one word.
 ````
 
-**ELI5** — 480 tokens
+**ELI5** — 108 words
 
 ````markdown
 Here's the message:
@@ -561,7 +563,7 @@ Fix line 12, then run: myapp --check-config
 I'd go with **1** if line numbers are free, else **2**. Not worth extra work.
 ````
 
-**Concise** — 378 tokens
+**Concise** — 122 words
 
 ````markdown
 ```
@@ -586,7 +588,7 @@ Variants for other bad inputs on the same line:
 Keep the exit code non-zero (`1`) and write to stderr so scripts can detect the failure.
 ````
 
-**DTS** — 386 tokens
+**DTS** — 153 words
 
 ````markdown
 ```
@@ -612,7 +614,7 @@ Two variants if your port rule is stricter:
 - Port already bound — this is a different error, not an invalid port. Report it at bind time with the owning PID.
 ````
 
-**Caveman** — 292 tokens
+**Caveman** — 108 words
 
 ````markdown
 ```
@@ -652,19 +654,19 @@ Review this: `def second(s): return s.split(',')[1]`
 ```
 
 <table>
-<tr><th>Standard</th><th>Tokens</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
-<tr><td>No standard</td><td align="right">1445</td><td align="right">&mdash;</td><td align="center">2/2</td><td>nothing</td></tr>
-<tr><td>ASD-STE100</td><td align="right">2377</td><td align="right">+64%</td><td align="center">2/2</td><td>nothing</td></tr>
-<tr><td>ELI5</td><td align="right">788</td><td align="right">-45%</td><td align="center">2/2</td><td>nothing</td></tr>
-<tr><td>Concise</td><td align="right">434</td><td align="right">-70%</td><td align="center">2/2</td><td>nothing</td></tr>
-<tr><td><b>DTS</b></td><td align="right">1241</td><td align="right">-14%</td><td align="center"><b>2/2</b></td><td>nothing</td></tr>
-<tr><td>Caveman</td><td align="right">500</td><td align="right">-65%</td><td align="center">2/2</td><td>nothing</td></tr>
+<tr><th>Standard</th><th>Words</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
+<tr><td>No standard</td><td align="right">409</td><td align="right">&mdash;</td><td align="center">2/2</td><td>nothing</td></tr>
+<tr><td>ASD-STE100</td><td align="right">325</td><td align="right">-21%</td><td align="center">2/2</td><td>nothing</td></tr>
+<tr><td>ELI5</td><td align="right">187</td><td align="right">-54%</td><td align="center">2/2</td><td>nothing</td></tr>
+<tr><td>Concise</td><td align="right">142</td><td align="right">-65%</td><td align="center">2/2</td><td>nothing</td></tr>
+<tr><td><b>DTS</b></td><td align="right">298</td><td align="right">-27%</td><td align="center"><b>2/2</b></td><td>nothing</td></tr>
+<tr><td>Caveman</td><td align="right">148</td><td align="right">-64%</td><td align="center">2/2</td><td>nothing</td></tr>
 </table>
 
 ### Side by side
 
 <table>
-<tr><th width="50%">No standard — 1445 tokens</th><th width="50%">DTS — 1241 tokens</th></tr>
+<tr><th width="50%">No standard — 409 words</th><th width="50%">DTS — 298 words</th></tr>
 <tr>
 <td valign="top">
 
@@ -811,7 +813,7 @@ assert second_field_csv('a,"b,c",d') == "b,c"
 <details>
 <summary>Every reply in full, raw</summary>
 
-**No standard** — 1445 tokens
+**No standard** — 409 words
 
 ````markdown
 ## Review
@@ -891,7 +893,7 @@ def second_field(line: str, *, strip: bool = True) -> str:
 If this is used in one place, inline it — a one-line wrapper around `split` earns its keep only if it adds validation, documentation, or a name that clarifies intent. The version above does; the original mostly just hides a `split` call.
 ````
 
-**ASD-STE100** — 2377 tokens
+**ASD-STE100** — 325 words
 
 ````markdown
 ## Summary
@@ -934,7 +936,7 @@ If the input is CSV data with quoted fields, use `csv.reader` instead of this fu
 If the fields can have leading spaces, add `.strip()` to the return value. This is a change in behavior, so make it only when the callers expect it.
 ````
 
-**ELI5** — 788 tokens
+**ELI5** — 187 words
 
 ````markdown
 **What I did:** Read your function and walked through it by hand. Didn't run it.
@@ -975,7 +977,7 @@ def second(s, default=None):
 **Do this now:** pick A or B, paste it in, then test with `second("hello")`. You should get `None`, not a crash.
 ````
 
-**Concise** — 434 tokens
+**Concise** — 142 words
 
 ````markdown
 Works, but it's fragile in three ways:
@@ -1002,7 +1004,7 @@ def second(s, default=None):
 Consider a more descriptive name (`second_field`?) since `second` reads like a time unit.
 ````
 
-**DTS** — 1241 tokens
+**DTS** — 298 words
 
 ````markdown
 **Main error: `IndexError` on any input without a comma.** `second("abc")` raises `IndexError: list index out of range`. Same for `""`.
@@ -1063,7 +1065,7 @@ assert second_field_csv('a,"b,c",d') == "b,c"
 ```
 ````
 
-**Caveman** — 500 tokens
+**Caveman** — 148 words
 
 ````markdown
 `def second(s): return s.split(',')[1]`
@@ -1108,19 +1110,19 @@ Write the README intro paragraph for a Rust CLI that converts CSV to Parquet.
 ```
 
 <table>
-<tr><th>Standard</th><th>Tokens</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
-<tr><td>No standard</td><td align="right">846</td><td align="right">&mdash;</td><td align="center">5/5</td><td>nothing</td></tr>
-<tr><td>ASD-STE100</td><td align="right">1246</td><td align="right">+47%</td><td align="center">5/5</td><td>nothing</td></tr>
-<tr><td>ELI5</td><td align="right">761</td><td align="right">-10%</td><td align="center">4/5</td><td>convert|transform</td></tr>
-<tr><td>Concise</td><td align="right">149</td><td align="right">-82%</td><td align="center">4/5</td><td>install|cargo|usage</td></tr>
-<tr><td><b>DTS</b></td><td align="right">215</td><td align="right">-75%</td><td align="center"><b>4/5</b></td><td>install|cargo|usage</td></tr>
-<tr><td>Caveman</td><td align="right">296</td><td align="right">-65%</td><td align="center">4/5</td><td>install|cargo|usage</td></tr>
+<tr><th>Standard</th><th>Words</th><th>vs&nbsp;base</th><th>Facts</th><th align="left">Dropped</th></tr>
+<tr><td>No standard</td><td align="right">215</td><td align="right">&mdash;</td><td align="center">5/5</td><td>nothing</td></tr>
+<tr><td>ASD-STE100</td><td align="right">237</td><td align="right">+10%</td><td align="center">5/5</td><td>nothing</td></tr>
+<tr><td>ELI5</td><td align="right">163</td><td align="right">-24%</td><td align="center">4/5</td><td>convert|transform</td></tr>
+<tr><td>Concise</td><td align="right">72</td><td align="right">-67%</td><td align="center">4/5</td><td>install|cargo|usage</td></tr>
+<tr><td><b>DTS</b></td><td align="right">80</td><td align="right">-63%</td><td align="center"><b>4/5</b></td><td>install|cargo|usage</td></tr>
+<tr><td>Caveman</td><td align="right">99</td><td align="right">-54%</td><td align="center">4/5</td><td>install|cargo|usage</td></tr>
 </table>
 
 ### Side by side
 
 <table>
-<tr><th width="50%">No standard — 846 tokens</th><th width="50%">DTS — 215 tokens</th></tr>
+<tr><th width="50%">No standard — 215 words</th><th width="50%">DTS — 80 words</th></tr>
 <tr>
 <td valign="top">
 
@@ -1168,7 +1170,7 @@ csv2parquet data.csv -o data.parquet
 <details>
 <summary>Every reply in full, raw</summary>
 
-**No standard** — 846 tokens
+**No standard** — 215 words
 
 ```markdown
 # csv2parquet
@@ -1190,7 +1192,7 @@ If you'd like a different flavor, here are two alternates:
 Swap in your actual crate name and drop the placeholder benchmark once you have real numbers.
 ```
 
-**ASD-STE100** — 1246 tokens
+**ASD-STE100** — 237 words
 
 ```markdown
 ## README intro (descriptive, pragmatic mode)
@@ -1217,7 +1219,7 @@ The intro is descriptive, so it has no imperative and no "you must" text. Put th
 The paragraph also has no "blazingly fast", "seamlessly", or "powerful". If you want a speed claim, give a number and the test conditions: "converts a 1 GB CSV file in 4 seconds on 8 cores."
 ```
 
-**ELI5** — 761 tokens
+**ELI5** — 163 words
 
 ```markdown
 **Here's the paragraph.** I used `csv2parquet` as the name — swap it if yours is different.
@@ -1238,7 +1240,7 @@ I'd go with **1**. The extra sentence costs nothing and helps newcomers.
 **Next:** paste it in, then tell me the real tool name and I'll fix the wording.
 ```
 
-**Concise** — 149 tokens
+**Concise** — 72 words
 
 ```markdown
 # csv2parquet
@@ -1246,7 +1248,7 @@ I'd go with **1**. The extra sentence costs nothing and helps newcomers.
 A fast, single-binary CLI for converting CSV files to Apache Parquet. It infers column types by sampling your data, streams records in batches so memory stays flat regardless of file size, and lets you pick the compression codec, row group size, and schema overrides when inference isn't enough. Point it at a file or pipe from stdin, and get a compressed, columnar Parquet file ready for DuckDB, Spark, or Pandas.
 ```
 
-**DTS** — 215 tokens
+**DTS** — 80 words
 
 ````markdown
 # csv2parquet
@@ -1266,7 +1268,7 @@ csv2parquet data.csv -o data.parquet
 - Delimiter, quote, and header control for non-standard CSV
 ````
 
-**Caveman** — 296 tokens
+**Caveman** — 99 words
 
 ````markdown
 ```markdown

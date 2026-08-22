@@ -40,7 +40,7 @@ Ask glm-5.2 to explain processes and threads. It opens with a house-and-tenant a
 
 Expect the high end on a smaller or older model. Expect the low end on a frontier model that already writes tightly.
 
-Measured on 50 prompts with the model bare, Opus cuts output on 34 of them. The median prompt falls 10%, the best falls 49%, and the worst rises 57%. Fact retention goes up, from 95.9% to 97.8%. Which way it goes depends on what you ask for. Design, enumeration, debugging and comparison answers fall 20% to 25%. Error messages rise 25%, and short lookups rise 8%. Asked whether `git revert` rewrites history, Opus under DTS writes more. The standard asks for the contrast cases a bare model omits.
+Measured on 50 prompts with the model bare, Opus cuts output on 34 of them. The median prompt falls 10%, the best falls 49%, and the worst rises 57%. Fact retention goes up, from 95.6% to 97.7%. Which way it goes depends on what you ask for. Design, enumeration, debugging and comparison answers fall 20% to 25%. Error messages rise 25%, and short lookups rise 8%. Asked whether `git revert` rewrites history, Opus under DTS writes more. The standard asks for the contrast cases a bare model omits.
 
 On glm-5.2 there is no such split. Every one of the 50 prompts got shorter, the median by 83%.
 
