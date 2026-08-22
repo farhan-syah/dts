@@ -4,9 +4,9 @@ An always-on output policy for coding agents.
 
 Your agent writes too much. This makes it write less everywhere it writes — replies, commit messages, PR bodies, code comments, docs, error strings — from one install, with nothing to invoke and nothing to remember.
 
-**Across the three model setups measured here, it cut output tokens 12% to 83% and held 96% to 101% of the judge score.**
+**In conversation it cut output tokens 12% to 83% and held 96% to 101% of the judge score. Inside an agent loop it writes 14% less prose and costs nothing extra.**
 
-Three setups are not a law. Every number ships with the benchmark that produced it. Run it on your own model.
+Those are two different surfaces with two different answers. Every number ships with the benchmark that produced it. Run both on your own model.
 
 ## How it is built
 
@@ -178,6 +178,10 @@ Only Claude Code has an output style. Every other agent gets the same rules thro
 
 ## What you save
 
+Two surfaces, two answers. Do not carry a number from one to the other.
+
+### In conversation
+
 Savings depend on your model. In the three setups below, quality held.
 
 | Your setup                  | Before      | After | Saved    | Quality kept |
@@ -198,9 +202,26 @@ Expect the high end on a smaller or older model. Expect the low end on a frontie
 
 Anyone who gives one number for every model has measured one model. Measure yours.
 
+### Inside an agent loop
+
+A coding agent reads far more than it writes. Across 48 paired sessions on a real repository, every prose measure moved and the bill did not.
+
+| Measure         | Baseline | DTS    | Change     | 95% CI           |
+| --------------- | -------- | ------ | ---------- | ---------------- |
+| Prose written   | 2021 ch  | 1747   | **-13.6%** | [-23.8%, -4.3%]  |
+| Cost            | $0.0880  | 0.0874 | -0.7%      | [-6.5%, +4.6%]   |
+| Turns           | 6.9      | 6.6    | -4.5%      | [-12.0%, +2.1%]  |
+| Tasks completed | 12/12    | 12/12  | —          | —                |
+
+**Output tokens are 0.9% of the tokens in an agent session.** There are 102 tokens read for every one written. Compressing what the agent says cannot move a bill dominated by what it reads, however hard you compress.
+
+So DTS makes an agent write shorter, and charges you nothing for it. That second half is not free elsewhere: Caveman on the same harness cut output tokens 31.5% and moved cost `+9.6%`.
+
+Expect the conversation numbers where you talk to the model. Expect these where it works on your code.
+
 ## How it compares
 
-One model wrote 384 answers across 6 arms. **Two** other models graded every one. 64 answers per arm.
+One model wrote 384 answers across 6 arms. **Two** other models graded every one. 64 answers per arm. This section is the conversational benchmark; the agent-loop numbers are above.
 
 Every rival is the real thing people install, copied word for word: [Caveman](https://github.com/JuliusBrussee/caveman), [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish), [ponytail](https://github.com/DietrichGebert/ponytail). Versions are in [`bench/arms/PROVENANCE.md`](bench/arms/PROVENANCE.md).
 
@@ -268,7 +289,7 @@ Asked to explain a Rust move error, ASD-STE100 produced:
 | [`skills/dts/`](skills/dts/)                   | The full spec. Costs nothing until something calls it. |
 | [`output-styles/dts.md`](output-styles/dts.md) | Chat style, Claude Code only.                          |
 | [`overlays/`](overlays/)                       | Templates for adding your own rules.                   |
-| [`bench/`](bench/)                             | The benchmark.                                         |
+| [`bench/`](bench/)                             | The benchmark, conversational and agentic.             |
 | [`tests/`](tests/)                             | Unit tests. `python3 -m unittest discover -s tests`    |
 
 ## Turning it off, and adding your own rules
@@ -305,6 +326,13 @@ cd bench
 ./bench.py --list    # arms, models, and the 32 prompts
 ./runall.sh --dry    # show the plan
 ./runall.sh          # run it
+```
+
+The agent-loop benchmark runs a headless Claude Code session per trial against a pinned real repository, and installs each arm the way you would, as a project memory file.
+
+```sh
+./agentic.py --list
+./agentic.py --arms baseline dts --reps 4 --model haiku
 ```
 
 Models are written `provider:model`:
@@ -349,6 +377,7 @@ No model ever grades its own writing, and two judges score every answer.
 
 - Savings depend on your model and your harness, not on the standard alone. Treat every number here as one setup measured once, and run the benchmark on yours.
 - One writer model was compared across all arms, plus two Claude Opus setups measured separately. Three setups cannot predict a fourth.
+- The agent-loop numbers are one model on one repository across 8 prose-heavy tasks. No judge scored those answers, so they are shorter by measurement and equally correct only by task completion.
 - The judges are language models, told that length is not quality. They are not people, and two of them agree exactly on 39% of answers. Gaps under about half a point are noise, which is why every comparison above carries an interval.
 - The lint is regular expressions. It cannot see passive voice or parts of speech, so it undercounts.
 - Raw answers are not committed. `out/` stays out of the repo, so these tables cannot be audited without rerunning against the same model version.

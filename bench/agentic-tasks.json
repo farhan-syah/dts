@@ -1,0 +1,25 @@
+[
+{"id": "ag01", "cat": "explain", "edits": false,
+ "q": "Read src/itsdangerous/signer.py and explain how the signature is produced and verified. Name the exact functions involved."},
+
+{"id": "ag02", "cat": "explain", "edits": false,
+ "q": "Explain the difference between Serializer and URLSafeSerializer in this codebase, and when each is the right choice."},
+
+{"id": "ag03", "cat": "review", "edits": false,
+ "q": "Review src/itsdangerous/timed.py for correctness problems an attacker could exploit. Report what you find and where."},
+
+{"id": "ag04", "cat": "review", "edits": false,
+ "q": "Read the test suite and report which public behaviours are NOT covered by tests."},
+
+{"id": "ag05", "cat": "debug", "edits": false,
+ "q": "A user reports that a token signed on one server fails to verify on another. Using this codebase, work out every configuration difference that would cause it, and report them."},
+
+{"id": "ag06", "cat": "report", "edits": false,
+ "q": "Summarise what changed in the two most recent entries of CHANGES.rst, and say which of them affect users who only use URLSafeTimedSerializer."},
+
+{"id": "ag07", "cat": "docs", "edits": true,
+ "q": "Add a docstring to the want_bytes function in src/itsdangerous/encoding.py describing what it does, its parameters, and what it raises. Match the docstring style already used in that file."},
+
+{"id": "ag08", "cat": "comment", "edits": true,
+ "q": "In src/itsdangerous/signer.py, add a short comment above the constant-time comparison explaining why it must be constant time. Change nothing else."}
+]

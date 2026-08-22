@@ -233,6 +233,44 @@ class TestPromptCorpus(unittest.TestCase):
                             self.fail(f"{name}:{r['id']} bad regex {pat!r}: {e}")
 
 
+class TestAgenticTasks(unittest.TestCase):
+    def rows(self):
+        with open(os.path.join(ROOT, "bench", "agentic-tasks.json")) as f:
+            return json.load(f)
+
+    def test_corpus_is_well_formed(self):
+        rows = self.rows()
+        self.assertGreater(len(rows), 0)
+        ids = [r["id"] for r in rows]
+        self.assertEqual(len(ids), len(set(ids)), "duplicate task id")
+        for r in rows:
+            self.assertTrue(r.get("q", "").strip(), f"{r['id']} empty q")
+            self.assertTrue(r.get("cat", "").strip(), f"{r['id']} no cat")
+            self.assertIsInstance(r.get("edits"), bool, f"{r['id']} edits flag")
+
+    def test_paths_named_in_tasks_exist_in_the_pinned_fixture(self):
+        """A task naming a missing file measures the agent hunting, not writing."""
+        import re
+        pat = re.compile(r'\b(src/[\w/]+\.py|tests/[\w/]+\.py|[A-Z]+\.rst)')
+        named = {m for r in self.rows() for m in pat.findall(r["q"])}
+        self.assertTrue(named, "no file paths found in the task corpus")
+        cache = os.path.join(ROOT, "bench", "out", "fixture")
+        if not os.path.isdir(cache):
+            self.skipTest("fixture not cloned yet; run agentic.py once")
+        for path in sorted(named):
+            self.assertTrue(os.path.exists(os.path.join(cache, path)),
+                            f"task names a path absent from the fixture: {path}")
+
+    def test_harness_imports_and_declares_a_pinned_commit(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "agentic", os.path.join(ROOT, "bench", "agentic.py"))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        self.assertEqual(len(m.COMMIT), 40, "fixture commit must be a full sha")
+        self.assertTrue(m.REPO.startswith("https://"))
+
+
 class TestArms(unittest.TestCase):
     def test_every_arm_exists_and_baseline_is_empty(self):
         d = os.path.join(ROOT, "bench", "arms")
