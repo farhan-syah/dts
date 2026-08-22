@@ -10,11 +10,11 @@ Three setups are not a law. Every number ships with the benchmark that produced 
 
 ## How it is built
 
-| Layer                      | Loaded     | Cost                        | Owns                                    |
-| -------------------------- | ---------- | --------------------------- | --------------------------------------- |
-| [Core rules](rules/dts.md) | every turn | ~1000 input tokens, cached  | every surface, always                   |
-| [Skill](skills/dts/)       | on demand  | nothing until called        | full spec, audits, per-artifact shapes  |
-| [Your overlays](overlays/) | every turn | yours                       | domain exceptions, other languages      |
+| Layer                      | Loaded     | Cost                       | Owns                                   |
+| -------------------------- | ---------- | -------------------------- | -------------------------------------- |
+| [Core rules](rules/dts.md) | every turn | ~1000 input tokens, cached | every surface, always                  |
+| [Skill](skills/dts/)       | on demand  | nothing until called       | full spec, audits, per-artifact shapes |
+| [Your overlays](overlays/) | every turn | yours                      | domain exceptions, other languages     |
 
 The core is small enough to leave on. Depth sits in the skill, which costs nothing until something calls it. Your exceptions sit in an overlay the installer never touches.
 
@@ -28,30 +28,26 @@ Cutting tokens has meant choosing between two bad deals.
 
 Paste "explain like I'm five" into your config. You are done in a minute.
 
-Your agent then scores 14.5 out of 20. It drops a third of the facts you asked for.
+Your agent then scores 14.3 out of 20. It drops a third of the facts you asked for.
 
-ASD-STE100 does better at 17.8. But it writes `the ampersand symbol` where an engineer needed `&`.
+ASD-STE100 does better at 17.9. But it writes `the ampersand symbol` where an engineer needed `&`.
 
 ### 2. Good output, but real setup
 
-Caveman ships twenty skills.
-
-Its main skill tightens conversation, then exempts everything else on purpose:
+Caveman ships twenty skills. Its main skill tightens conversation, then exempts everything else on purpose:
 
 > Persisted outside chat: write normal prose — code, comments, commits, docs, issue/PR/MR text, memory files.
 
-So your commit messages stay long until you remember `caveman-commit`. Your docs stay long until you remember `caveman-compress`.
-
-Whatever you forget stays full length.
+So your commit messages stay long until you remember `caveman-commit`. Whatever you forget stays full length.
 
 ### DTS takes the first deal and removes the cost
 
 | Approach   | Setup           | Judge /20 | Covers your docs and commits |
-| ---------- | --------------- | ----------- | ---------------------------- |
-| ELI5       | one prompt      | 14.5        | yes                          |
-| ASD-STE100 | one prompt      | 17.8        | yes                          |
-| Caveman    | twenty skills   | 17.9        | only when you invoke them    |
-| **DTS**    | **one install** | **18.8**    | **yes, always**              |
+| ---------- | --------------- | --------- | ---------------------------- |
+| ELI5       | one prompt      | 14.3      | yes                          |
+| Caveman    | twenty skills   | 17.1      | only when you invoke them    |
+| ASD-STE100 | one prompt      | 17.9      | yes                          |
+| **DTS**    | **one install** | **18.7**  | **yes, always**              |
 
 **Want fine control, per-task skills, and intensity levels?** Use [Caveman](https://github.com/JuliusBrussee/caveman).
 
@@ -102,6 +98,7 @@ If your agent is not in the table, it almost certainly reads a global instructio
 
 ```markdown
 <!-- dts:start -->
+
 ## Output Standard (DTS 1.0)
 
 Governs every English word this agent writes for engineers and agents: replies in conversation, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.
@@ -156,7 +153,7 @@ Savings depend on your model. In the three setups below, quality held.
 
 | Your setup                  | Before      | After | Saved    | Quality kept |
 | --------------------------- | ----------- | ----- | -------- | ------------ |
-| glm-5.2                     | 1001 tokens | 171   | **-83%** | 96%          |
+| glm-5.2                     | 1076 tokens | 190   | **-82%** | 96%          |
 | Claude Opus, in Claude Code | 926         | 743   | **-20%** | **101%**     |
 | Claude Opus, bare model     | 735         | 645   | **-12%** | 98%          |
 
@@ -174,27 +171,31 @@ Anyone who gives one number for every model has measured one model. Measure your
 
 ## How it compares
 
-One model wrote 320 answers across 5 arms. A different model graded them on 4 things. 64 answers per arm.
+One model wrote 384 answers across 6 arms. **Two** other models graded every one. 64 answers per arm.
 
-Every rival is the real thing people install, copied word for word: [Caveman](https://github.com/JuliusBrussee/caveman) and [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish). Versions are in [`bench/arms/PROVENANCE.md`](bench/arms/PROVENANCE.md).
+Every rival is the real thing people install, copied word for word: [Caveman](https://github.com/JuliusBrussee/caveman), [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish), [ponytail](https://github.com/DietrichGebert/ponytail). Versions are in [`bench/arms/PROVENANCE.md`](bench/arms/PROVENANCE.md).
 
-| Standard    | Tokens  | vs baseline | English /5 | Judge /20 | Cost per point | False claims |
-| ----------- | ------- | ----------- | ---------- | ----------- | ---------------------- | -------------- |
-| No standard | 1001    | —           | 5.00       | 19.45       | 51.5                   | 0.53           |
-| **DTS**     | **171** | **-83%**    | **5.00**   | **18.77**   | **9.1**                | **0.23**       |
-| Caveman     | 212     | -79%        | 4.27       | 17.94       | 11.8                   | 0.34           |
-| ASD-STE100  | 187     | -81%        | 4.97       | 17.80       | 10.5                   | 0.27           |
-| ELI5        | 169     | -83%        | 4.69       | 14.48       | 11.7                   | 0.66           |
+| Standard    | Median tokens | vs baseline | English /5 | Judge /20 |
+| ----------- | ------------- | ----------- | ---------- | --------- |
+| No standard | 1076          | —           | 5.00       | 19.58     |
+| **DTS**     | **190**       | **-82%**    | **5.00**   | **18.74** |
+| ponytail    | 210           | -81%        | 4.97       | 18.59     |
+| ASD-STE100  | 172           | -84%        | 5.00       | 17.90     |
+| Caveman     | 150           | -86%        | 3.80       | 17.12     |
+| ELI5        | 158           | -85%        | 4.40       | 14.33     |
 
-Two results stand out.
+**Which gaps are real.** Both judges scored every answer. A paired bootstrap over the same prompts gives:
 
-**The English stays perfect.** 5.00, same as an agent with no rules at all. Caveman drops to 4.27 because it writes fragments.
+| Comparison        | Difference | 95% CI         | Verdict               |
+| ----------------- | ---------- | -------------- | --------------------- |
+| DTS vs ELI5       | +4.43      | [+3.71, +5.18] | real                  |
+| DTS vs Caveman    | +1.60      | [+1.06, +2.17] | real                  |
+| DTS vs ASD-STE100 | +0.83      | [+0.40, +1.24] | real                  |
+| DTS vs ponytail   | +0.17      | [-0.29, +0.65] | **too close to call** |
 
-**It invents less per answer.** 0.23 false claims against the baseline's 0.53.
+**The English stays perfect.** 5.00, same as no rules at all. Caveman drops to 3.80 because it writes fragments.
 
-Read that one carefully. A shorter answer makes fewer claims, so it has fewer chances to be wrong. The count alone cannot separate "more careful" from "said less". [`report.py`](bench/report.py) also prints false claims per 1000 words and the share of answers holding at least one, which do separate them. Both are in the run output, not in this table, because no frozen run currently backs them.
-
-It loses on one thing: completeness, 4.23 against Caveman's 4.36. Caveman keeps a little more because it caps nothing.
+**ponytail is not a rival.** It governs the code an agent writes, not the prose, and its own skill description says not to use it for prose. It is here as a control showing the two do not overlap. Run both.
 
 ### Did the rules actually get followed
 
@@ -208,7 +209,7 @@ Token counts show what an answer cost. They do not show whether your agent follo
 | ELI5        | 0.72                      |
 | No standard | 1.45                      |
 
-ASD-STE100 wins this and loses the benchmark. It obeys its own rules slightly better and still scores 17.80 against 18.77. Obedience is not the point.
+ASD-STE100 wins this and loses the benchmark. It obeys its own rules slightly better and still scores 17.90 against 18.74. Obedience is not the point.
 
 ## Why not just use ASD-STE100
 
@@ -228,17 +229,7 @@ Asked to explain a Rust move error, ASD-STE100 produced:
 
 ## The rules
 
-15 rules, in [`rules/dts.md`](rules/dts.md). The short version:
-
-- Cut filler, never content. Every fact the reader needs survives.
-- Answer first. No preamble, no repeating the question, no recap at the end.
-- One idea per sentence. 15 words for an instruction, 20 for an explanation. Shorter is better.
-- Active voice. Simple tense.
-- Only `can`, `will`, `must`. No `should`, `would`, `may`, `might`, `could`.
-- Lists and tables for anything countable. Stop when the next row adds nothing.
-- One word per idea. The word is fixed, not chosen fresh each time.
-- Code, paths, and error messages are copied exactly.
-- Short prose only. Code is always complete, never `// ... existing code`.
+15 rules, in [`rules/dts.md`](rules/dts.md). The full text is in the paste block above.
 
 ## What ships
 
@@ -323,17 +314,15 @@ So four things are measured together.
 
 The `english` axis matters most. Every ratio metric favours telegraphic output until you check whether it is still a sentence.
 
-No model ever grades its own writing. Self-preference inflated one arm by roughly 40% in an early run.
+No model ever grades its own writing, and two judges score every answer.
 
 ## What this does not prove
 
-- Savings are not a property of the standard alone. They come from the standard, your model, and your harness together. Treat any single number, including the ones here, as one setup measured once.
-- The comparison used one writer model, glm-5.2. Two Claude Opus setups were added separately. Three setups show savings vary. They cannot predict a fourth.
-- The judges are language models. They are told that length is not quality, and two independent judges agreed on the ranking, but they are not people.
-- No confidence interval is reported, so a small gap is not a result. DTS scores 18.77 against Caveman's 17.94. That 0.83 is one judge model's mean over 64 answers. It has not been shown to exceed judge noise. The gap against ELI5 is 4.29 and is not in doubt.
-- Raw answers are not committed. `out/` is regenerable and stays out of the repo, so the tables here cannot be audited without rerunning against the same model version. Rerun before citing them.
+- Savings depend on your model and your harness, not on the standard alone. Treat every number here as one setup measured once, and run the benchmark on yours.
+- One writer model was compared across all arms, plus two Claude Opus setups measured separately. Three setups cannot predict a fourth.
+- The judges are language models, told that length is not quality. They are not people, and two of them agree exactly on 39% of answers. Gaps under about half a point are noise, which is why every comparison above carries an interval.
 - The lint is regular expressions. It cannot see passive voice or parts of speech, so it undercounts.
-- 64 answers per arm, temperature 0.2, no runaway answers. An earlier 32-answer run was decided by a single answer that hit the token ceiling. Treat any single-run result as undecided.
+- Raw answers are not committed. `out/` stays out of the repo, so these tables cannot be audited without rerunning against the same model version.
 
 ## License
 

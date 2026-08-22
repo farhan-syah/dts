@@ -15,7 +15,14 @@ from collections import defaultdict
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
-def agg(rows):
+def agg(rows, ceiling=None):
+    """Aggregate one arm.
+
+    An answer stopped at max_tokens is truncated mid-sentence, not a long
+    answer. One such run moved an arm's mean by 60 tokens and tripled its
+    spread, so the median is reported beside the mean and the ceiling hits are
+    counted rather than quietly averaged in.
+    """
     ok = [r for r in rows if "error" not in r]
     if not ok:
         return None
@@ -27,6 +34,8 @@ def agg(rows):
     a = {
         "n": len(ok), "err": len(rows) - len(ok),
         "tok": st.mean(tok), "sd": st.pstdev(tok) if len(tok) > 1 else 0.0,
+        "med": st.median(tok),
+        "cut": sum(1 for t in tok if ceiling and t >= ceiling),
         "chars": st.mean(r["chars"] for r in ok),
         "cov": 100.0 * fac / tot if tot else 0.0,
         "tpf": sum(tok) / fac if fac else float("inf"),
@@ -58,8 +67,8 @@ def table(title, groups, base_key, order):
     judged = any(g and g.get("jn") for g in groups.values())
     axes = next((g["axes"] for g in groups.values() if g and g.get("axes")), [])
     print(f"\n{title}")
-    hdr = (f"{'arm':<10}{'n':>4}{'out tok':>9}{'±sd':>7}{'vs base':>9}"
-           f"{'facts%':>8}{'tok/fact':>10}")
+    hdr = (f"{'arm':<10}{'n':>4}{'cut':>4}{'out tok':>9}{'med':>7}{'±sd':>7}"
+           f"{'vs base':>9}{'facts%':>8}{'tok/fact':>10}")
     if judged:
         for k in axes:
             hdr += f"{k[:5]:>7}"
@@ -70,9 +79,10 @@ def table(title, groups, base_key, order):
         a = groups.get(k)
         if not a:
             continue
-        d = f"{100*(a['tok']-b['tok'])/b['tok']:+.1f}%" if b else "-"
-        row = (f"{k:<10}{a['n']:>4}{a['tok']:>9.0f}{a['sd']:>7.0f}{d:>9}"
-               f"{a['cov']:>7.1f}%{a['tpf']:>10.1f}")
+        # Compared on the median: one truncated run must not decide a ranking.
+        d = f"{100*(a['med']-b['med'])/b['med']:+.1f}%" if b and b['med'] else "-"
+        row = (f"{k:<10}{a['n']:>4}{a['cut']:>4}{a['tok']:>9.0f}{a['med']:>7.0f}"
+               f"{a['sd']:>7.0f}{d:>9}{a['cov']:>7.1f}%{a['tpf']:>10.1f}")
         if judged:
             if "qual" in a:
                 e = (f"{100*(a['tpq']-b['tpq'])/b['tpq']:+.1f}%"
@@ -86,6 +96,8 @@ def table(title, groups, base_key, order):
                 row += (f"{'-':>7}" * len(axes)
                         + f"{'-':>7}{'-':>10}{'-':>8}{'-':>7}{'-':>7}{'-':>7}")
         print(row)
+    print("  cut = answers stopped at max_tokens, truncated not finished.  "
+          "vs base compares medians.")
     print("  tok/fact = regex keyword coverage (weak: a bare noun counts).")
     if judged:
         print(f"  qual = {'+'.join(axes)}, 0-{5*len(axes)}.  "
@@ -120,7 +132,12 @@ def main():
         by_arm[r["arm"]].append(r)
     print(f"model={d['model']}  temp={d['temp']}  reps={d['reps']}  "
           f"elapsed={d['elapsed_s']}s")
-    table("OVERALL", {k: agg(v) for k, v in by_arm.items()}, a.base, order)
+    ceiling = d.get("max_tokens")
+    if ceiling is None:
+        # Runs written before max_tokens was recorded. 4096 was the default.
+        ceiling = 4096
+    table("OVERALL", {k: agg(v, ceiling) for k, v in by_arm.items()},
+          a.base, order)
 
     if a.by_cat:
         cats = sorted({r["cat"] for r in rows})
@@ -129,7 +146,8 @@ def main():
             for r in rows:
                 if r["cat"] == c:
                     g[r["arm"]].append(r)
-            table(f"CATEGORY: {c}", {k: agg(v) for k, v in g.items()}, a.base, order)
+            table(f"CATEGORY: {c}", {k: agg(v, ceiling) for k, v in g.items()},
+                  a.base, order)
 
     if a.missing:
         print(f"\nUNMET FACTS — arm {a.missing}")

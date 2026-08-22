@@ -143,7 +143,7 @@ def main():
 
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     json.dump({"model": a.model, "temp": a.temp, "reps": a.reps,
-               "prompts": a.prompts,
+               "prompts": a.prompts, "max_tokens": a.max_tokens,
                "elapsed_s": round(time.time() - t0, 1), "results": results},
               open(a.out, "w"), indent=1)
     errs = sum(1 for r in results if "error" in r)
