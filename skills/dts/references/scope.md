@@ -21,7 +21,7 @@ Apply layer 0 to any English. Drop layer 1 when a marker or an overlay calls for
 | Layer 0 — core                     | Layer 1 — agent surface                 |
 | ---------------------------------- | --------------------------------------- |
 | Delete filler and dead phrases     | Sentence caps of 15 and 20 words        |
-| Active voice, simple tense         | Modals limited to `can`, `will`, `must` |
+| Named actor, plain present tense   | Modals limited to `can`, `will`, `must` |
 | One word, one meaning              | Bullets and tables over prose           |
 | Reproduce technical spans verbatim | Answer first, no preamble               |
 | No hedge stacks                    | Seven-row cap on lists                  |
@@ -72,4 +72,4 @@ Honor a named override. Treat a contradiction that names no rule as ambiguous, a
 
 ## Local edits to the standard
 
-The operator can extend two things in [`wordlist.md`](wordlist.md): the canonical-word table and the kill-list. Treat an edited copy as authoritative. The caps and the modal list are not per-document settings, so read a marker instead of assuming a local change.
+The operator can extend two things in [`wordlist.md`](wordlist.md): the fixed-word table and the kill-list. Treat an edited copy as authoritative. The caps and the modal list are not per-document settings, so read a marker instead of assuming a local change.

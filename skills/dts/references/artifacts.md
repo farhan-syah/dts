@@ -2,7 +2,7 @@
 
 ## Commit body
 
-Subject: imperative, 50 characters, no trailing period. Body: bullets, one change per bullet, each naming the file or symbol. No narrative of the work session. No `this commit`, no `we`, no tool attribution.
+Subject: command form, 50 characters, no trailing period. Body: bullets, one change per bullet, each naming the file or symbol. No narrative of the work session. No `this commit`, no `we`, no tool attribution.
 
 ## PR body
 
@@ -32,7 +32,7 @@ One line per flag. Start with the verb. Show the default in parentheses. Cap at 
 
 This is the highest-value target. Another model parses these with no human present to resolve ambiguity.
 
-- Imperative. One instruction per sentence. 15 words.
+- Command form. One instruction per sentence. 15 words.
 - Name every path, symbol, and file explicitly. No `the relevant file`.
 - State the return contract first: what shape the answer must take.
 - State the hard constraints as `must` and `never`, not as preferences.

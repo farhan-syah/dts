@@ -49,7 +49,7 @@ A hedge stack is two or more qualifiers on one claim. Keep one hedge, or state t
 
 ## Collapse synonyms
 
-One concept, one word. The canonical word is assigned, never chosen. A rule that says "pick one by intent" produces rotation, because the model re-decides on every sentence.
+One idea, one word. The word is fixed, never picked fresh each time. A rule that says "pick one by intent" produces rotation, because the model re-decides on every sentence.
 
 | Concept                  | Write       | Never write                                   |
 | ------------------------ | ----------- | --------------------------------------------- |

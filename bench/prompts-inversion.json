@@ -1,0 +1,62 @@
+[
+  {
+    "id": "inv01",
+    "cat": "aphorism",
+    "q": "In one or two sentences, explain why code review matters.",
+    "must": [
+      "review",
+      "bug|defect|error|quality",
+      "early|before|cheap|context|share"
+    ]
+  },
+  {
+    "id": "inv02",
+    "cat": "aphorism",
+    "q": "Summarise in one line what technical debt costs a team.",
+    "must": [
+      "debt",
+      "slow|interest|cost|time",
+      "later|future|compound|accrue"
+    ]
+  },
+  {
+    "id": "inv03",
+    "cat": "aphorism",
+    "q": "Write the closing line of a design doc arguing for a smaller API surface.",
+    "must": [
+      "API|surface|interface",
+      "small|fewer|less|narrow",
+      "maintain|change|break|support"
+    ]
+  },
+  {
+    "id": "inv04",
+    "cat": "aphorism",
+    "q": "Give the one-sentence rule a new engineer should remember about premature optimisation.",
+    "must": [
+      "optimi",
+      "measure|profile|data|evidence|first",
+      "premature|early|before"
+    ]
+  },
+  {
+    "id": "inv05",
+    "cat": "aphorism",
+    "q": "State the principle behind writing tests before code, in one sentence.",
+    "must": [
+      "test",
+      "before|first|drive|design",
+      "behavio|requirement|interface|contract"
+    ]
+  },
+  {
+    "id": "inv06",
+    "cat": "aphorism",
+    "q": "Explain in two sentences why a good error message matters.",
+    "must": [
+      "error",
+      "message|text",
+      "what|cause|fix|next|action"
+    ]
+  }
+]

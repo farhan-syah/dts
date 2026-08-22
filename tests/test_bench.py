@@ -210,6 +210,40 @@ class TestLint(unittest.TestCase):
             "Alpha beta gamma.\n\n```\ncode here\n```\n\nDelta epsilon zeta eta.")
         self.assertEqual(words, 7)
 
+    def test_inversion_recall_on_held_out_data(self):
+        """Measured on text the pattern was never tuned against.
+
+        Testing the six strings the regex was written for proved nothing. On
+        unseen data recall is 20%: the check proves an inversion is present,
+        never that none is.
+        """
+        with open(os.path.join(ROOT, "tests", "fixtures-inversion.json")) as f:
+            fx = json.load(f)
+        hit = sum(1 for s in fx["inversions"] if "inversion" in self.kinds(s))
+        recall = hit / len(fx["inversions"])
+        self.assertGreaterEqual(recall, 0.15,
+                                f"recall fell to {recall:.0%}; the pattern regressed")
+
+    def test_inversion_never_fires_on_plain_statements(self):
+        """Precision is the property this check actually has. It must stay 100%."""
+        with open(os.path.join(ROOT, "tests", "fixtures-inversion.json")) as f:
+            fx = json.load(f)
+        wrong = [s for s in fx["plain"] if "inversion" in self.kinds(s)]
+        self.assertEqual(wrong, [], "a plain statement was flagged")
+
+    def test_the_standard_passes_its_own_inversion_rule(self):
+        """The spec cannot break a rule it ships."""
+        shipped = [os.path.join(ROOT, p) for p in (
+            "rules/dts.md", "output-styles/dts.md", "skills/dts/SKILL.md",
+            "skills/dts/references/grammar.md", "skills/dts/references/wordlist.md",
+            "skills/dts/references/artifacts.md", "skills/dts/references/scope.md",
+            "skills/dts/references/check.md")]
+        for path in shipped:
+            with open(path) as f:
+                _c, _w, hits = lint.lint(f.read())
+            bad = [t for k, t in hits if k == "inversion"]
+            self.assertEqual(bad, [], f"{os.path.basename(path)} inverts: {bad}")
+
     def test_code_fence_content_is_exempt(self):
         self.assertEqual(
             self.kinds("Run it.\n\n```py\n# this should be robust\n```\n"),

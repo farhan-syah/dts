@@ -28,7 +28,7 @@ class Base(unittest.TestCase):
         self.mem = os.path.join(self.dir.name, "CLAUDE.md")
         self.rules = os.path.join(self.dir.name, "rules.md")
         with open(self.rules, "w") as f:
-            f.write("## Output Standard (DTS 1.0)\n\n- Answer first.\n")
+            f.write("## Output Standard (DTS 0.1)\n\n- Answer first.\n")
         self.addCleanup(self.dir.cleanup)
 
     def put(self, text):
@@ -71,7 +71,7 @@ class TestWrite(Base):
     def test_reinstall_updates_stale_content(self):
         install.write(self.mem, self.rules)
         with open(self.rules, "w") as f:
-            f.write("## Output Standard (DTS 1.0)\n\n- A new rule.\n")
+            f.write("## Output Standard (DTS 0.1)\n\n- A new rule.\n")
         install.write(self.mem, self.rules)
         out = self.get()
         self.assertIn("A new rule.", out)
@@ -101,13 +101,24 @@ class TestWrite(Base):
         self.assertEqual(self.block_count(), 1)
 
     def test_adopts_unmarked_hand_pasted_block(self):
-        self.put("# Notes\n\n## Output Standard (DTS 1.0)\n\n- stale\n\n"
+        self.put("# Notes\n\n## Output Standard (DTS 0.1)\n\n- stale\n\n"
                  "## Task Management\n\n- keep me\n")
         install.write(self.mem, self.rules)
         out = self.get()
         self.assertEqual(self.block_count(), 1)
         self.assertNotIn("- stale", out)
         self.assertIn("## Task Management", out)
+        self.assertIn("- keep me", out)
+
+    def test_a_block_from_an_older_version_is_adopted(self):
+        """Anyone running DTS 1.0 must not end up with two blocks."""
+        self.put("# Notes\n\n## Output Standard (DTS 1.0)\n\n- old rule\n\n"
+                 "## Mine\n\n- keep me\n")
+        install.write(self.mem, self.rules)
+        out = self.get()
+        self.assertEqual(self.block_count(), 1)
+        self.assertNotIn("- old rule", out)
+        self.assertNotIn("DTS 1.0", out)
         self.assertIn("- keep me", out)
 
     def test_empty_rules_file_aborts(self):
@@ -318,6 +329,21 @@ class TestProjectMode(unittest.TestCase):
             first = next(l for l in f if l.startswith("- "))
         for rel in self.files():
             self.assertIn(first.strip(), self.read(rel), rel)
+
+
+class TestReadmeBlockInSync(unittest.TestCase):
+    """The README carries a copy of the rules. Editing around it drifts it.
+
+    Only CI caught this before, so a push failed three times for a difference
+    a local run never reported.
+    """
+
+    def test_block_matches_the_shipped_rules(self):
+        r = subprocess.run(
+            [sys.executable, os.path.join(ROOT, "tools", "sync-readme.py"), "--check"],
+            capture_output=True, text=True, cwd=ROOT)
+        self.assertEqual(r.returncode, 0,
+                         f"{r.stdout}{r.stderr}run ./tools/sync-readme.py")
 
 
 class TestShippedRules(unittest.TestCase):

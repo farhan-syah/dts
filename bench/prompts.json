@@ -1,559 +1,509 @@
 [
-{
-"id": "ex01",
-"cat": "explain",
-"q": "Explain what Rust's ? operator does and when to use it instead of match.",
-"must": [
-"\\?",
-"match",
-"Result|Option",
-"Err|error",
-"return|propagat|bail"
-]
-},
-{
-"id": "ex02",
-"cat": "explain",
-"q": "Explain the difference between a process and a thread.",
-"must": [
-"process",
-"thread",
-"memory|address space",
-"schedul|CPU|kernel",
-"share|isolat"
-]
-},
-{
-"id": "ex03",
-"cat": "explain",
-"q": "Explain what a database index is and what it costs you.",
-"must": [
-"index",
-"lookup|read|query|search",
-"write|insert|update",
-"disk|space|storage",
-"B-?tree|scan"
-]
-},
-{
-"id": "ex04",
-"cat": "explain",
-"q": "Explain what TCP backpressure is.",
-"must": [
-"backpressure|back-pressure",
-"window|buffer",
-"sender|producer",
-"receiv|consum",
-"slow|throttl|block"
-]
-},
-{
-"id": "ex05",
-"cat": "explain",
-"q": "Explain how HTTP cache validation with ETag works.",
-"must": [
-"ETag",
-"If-None-Match",
-"304",
-"header",
-"hash|version|token"
-]
-},
-{
-"id": "ex06",
-"cat": "explain",
-"q": "Explain what a memory barrier does in concurrent code.",
-"must": [
-"barrier|fence",
-"reorder",
-"memory",
-"CPU|compiler",
-"order|visib"
-]
-},
-{
-"id": "cmp01",
-"cat": "compare",
-"q": "Compare Arc<Mutex<T>> versus channels for sharing state across threads.",
-"must": [
-"Arc",
-"Mutex",
-"channel",
-"lock|contention|block",
-"own|move|send"
-]
-},
-{
-"id": "cmp02",
-"cat": "compare",
-"q": "Compare REST and gRPC for an internal service API.",
-"must": [
-"REST",
-"gRPC",
-"HTTP|protobuf|HTTP/2",
-"schema|contract|IDL|proto",
-"stream|latency|performance"
-]
-},
-{
-"id": "cmp03",
-"cat": "compare",
-"q": "Compare optimistic and pessimistic locking in a database.",
-"must": [
-"optimistic",
-"pessimistic",
-"version|timestamp|conflict",
-"lock",
-"retry|abort|rollback"
-]
-},
-{
-"id": "cmp04",
-"cat": "compare",
-"q": "Compare a monorepo and multiple repos for a 5-person team.",
-"must": [
-"monorepo",
-"multi|separate|poly",
-"build|CI|tooling",
-"depend|version",
-"atomic|coordinat"
-]
-},
-{
-"id": "cmp05",
-"cat": "compare",
-"q": "Compare Vec and VecDeque in Rust.",
-"must": [
-"Vec",
-"VecDeque",
-"push|pop|front|back",
-"ring|contiguous|slice",
-"O\\(1\\)|amortiz|complexity"
-]
-},
-{
-"id": "cmp06",
-"cat": "compare",
-"q": "Compare unit tests and integration tests in a Rust project.",
-"must": [
-"unit",
-"integration",
-"tests/|src/|module",
-"private|public|API",
-"cfg\\(test\\)|crate"
-]
-},
-{
-"id": "dbg01",
-"cat": "debug",
-"q": "My Rust build fails with: error[E0382]: borrow of moved value: `config`. What causes this and how do I fix it?",
-"must": [
-"E0382|move",
-"borrow",
-"clone|reference|&|Rc|Arc",
-"owner",
-"fix|use"
-]
-},
-{
-"id": "dbg02",
-"cat": "debug",
-"q": "A Postgres query got 100x slower after a deploy. Where do I look first?",
-"must": [
-"EXPLAIN|plan",
-"index",
-"statistic|ANALYZE|vacuum",
-"row|cardinal|estimate",
-"seq|scan"
-]
-},
-{
-"id": "dbg03",
-"cat": "debug",
-"q": "My Docker container exits immediately with code 0. What are the likely causes?",
-"must": [
-"exit|code 0",
-"foreground|background|daemon",
-"PID 1|entrypoint|CMD",
-"process|command",
-"end|finish|complete"
-]
-},
-{
-"id": "dbg04",
-"cat": "debug",
-"q": "A test passes locally but fails in CI with a timeout. How do I diagnose it?",
-"must": [
-"CI|local",
-"timeout",
-"race|order|paralle|flaky",
-"resource|slow|memory|CPU",
-"log|reproduce|env"
-]
-},
-{
-"id": "dbg05",
-"cat": "debug",
-"q": "I get 'too many open files' in a Rust server under load. What is wrong?",
-"must": [
-"file descriptor|fd|ulimit",
-"leak|close|drop",
-"limit",
-"socket|connection",
-"raise|increase|fix"
-]
-},
-{
-"id": "dbg06",
-"cat": "debug",
-"q": "A git rebase left me with 'detached HEAD'. How do I recover my work?",
-"must": [
-"detached HEAD",
-"branch",
-"git checkout|git switch|git branch",
-"reflog|commit",
-"recover|save"
-]
-},
-{
-"id": "rep01",
-"cat": "report",
-"q": "I added a null check to src/auth.rs line 42. The test suite passes. Give me the status report.",
-"must": [
-"src/auth\\.rs",
-"42|null|check",
-"test|pass",
-"Option|null|Rust"
-]
-},
-{
-"id": "rep02",
-"cat": "report",
-"q": "I refactored src/db/pool.rs to add exponential backoff, max 5 retries. cargo test passes, clippy is clean. Write the commit message.",
-"must": [
-"pool\\.rs|pool",
-"backoff",
-"retr|5",
-"exponential"
-]
-},
-{
-"id": "rep03",
-"cat": "report",
-"q": "Summarize this for a PR body: renamed Config to Settings across 12 files, updated docs, no behavior change.",
-"must": [
-"Config",
-"Settings",
-"12|files",
-"doc",
-"behavior|behaviour|no change"
-]
-},
-{
-"id": "rep04",
-"cat": "report",
-"q": "Write the release note for: fixed a crash on empty input, added --json flag, dropped Python 3.8 support.",
-"must": [
-"crash|empty",
-"--json",
-"3\\.8|Python",
-"drop|remov|support",
-"fix|add"
-]
-},
-{
-"id": "enum01",
-"cat": "enumerate",
-"q": "List the things that make a Dockerfile build slowly and how to fix each.",
-"must": [
-"layer|cache",
-"COPY|order",
-"multi-?stage",
-"dependenc|install",
-".dockerignore|context"
-]
-},
-{
-"id": "enum02",
-"cat": "enumerate",
-"q": "List the checks a code reviewer should run on a database migration.",
-"must": [
-"lock|blocking|downtime",
-"rollback|revert|down",
-"index|constraint",
-"data|backfill",
-"size|duration|large"
-]
-},
-{
-"id": "enum03",
-"cat": "enumerate",
-"q": "List the ways a Rust program can panic and how to avoid each.",
-"must": [
-"unwrap|expect",
-"index|slice|bound",
-"overflow|arithmetic|divide",
-"assert|panic!",
-"Result|Option|checked_|get\\("
-]
-},
-{
-"id": "enum04",
-"cat": "enumerate",
-"q": "List what belongs in a .gitignore for a Rust project and why.",
-"must": [
-"target/",
-"Cargo\\.lock",
-"\\.env|secret",
-"editor|\\.idea|\\.vscode|DS_Store",
-"build|artifact"
-]
-},
-{
-"id": "des01",
-"cat": "design",
-"q": "Design the error type for a CLI tool that reads config, hits an API, and writes files.",
-"must": [
-"enum|variant|type",
-"config|parse",
-"network|API|HTTP",
-"IO|io::Error|file",
-"From|source|thiserror|Display"
-]
-},
-{
-"id": "des02",
-"cat": "design",
-"q": "Design a retry policy for a flaky HTTP client. What are the parameters?",
-"must": [
-"backoff|exponential",
-"jitter|random",
-"max|attempt|retr",
-"timeout|deadline",
-"idempotent|status|5xx|429"
-]
-},
-{
-"id": "des03",
-"cat": "design",
-"q": "Design the CLI flags for a tool that syncs a local folder to S3.",
-"must": [
-"--dry-run|dry",
-"--delete|delete",
-"bucket|prefix|path",
-"--exclude|--include|filter",
-"concurren|--jobs|parallel"
-]
-},
-{
-"id": "err01",
-"cat": "errmsg",
-"q": "Write the error message a user sees when their config file has an invalid port number.",
-"must": [
-"port",
-"config|file|path",
-"line|:|found|invalid",
-"range|65535|number|integer"
-]
-},
-{
-"id": "err02",
-"cat": "errmsg",
-"q": "Write the CLI help text for a `deploy` command with flags for env, dry-run, and timeout.",
-"must": [
-"deploy",
-"--env|-e",
-"--dry-run",
-"--timeout",
-"default|usage"
-]
-},
-{
-"id": "doc01",
-"cat": "doc",
-"q": "Write the README intro paragraph for a Rust CLI that converts CSV to Parquet.",
-"must": [
-"CSV",
-"Parquet",
-"Rust|CLI|command",
-"convert|transform",
-"install|cargo|usage"
-]
-},
-{
-"id": "qk01",
-"cat": "quick",
-"q": "Does `git revert` rewrite history?",
-"must": [
-"no|does not|doesn't",
-"new commit",
-"history|rewrit"
-]
-},
-{
-"id": "qk02",
-"cat": "quick",
-"q": "What does HTTP 429 mean, and what should a client do?",
-"must": [
-"too many|rate limit",
-"retry|back ?off|wait",
-"Retry-After|header|delay"
-]
-},
-{
-"id": "qk03",
-"cat": "quick",
-"q": "Is it safe for two goroutines to write to the same map?",
-"must": [
-"no|not safe|unsafe",
-"race|concurrent",
-"mutex|sync\\.|channel"
-]
-},
-{
-"id": "qk04",
-"cat": "quick",
-"q": "What is the difference between `COPY` and `ADD` in a Dockerfile?",
-"must": [
-"COPY",
-"ADD",
-"extract|tar|URL|remote"
-]
-},
-{
-"id": "qk05",
-"cat": "quick",
-"q": "Does `SELECT *` cost more than naming the columns?",
-"must": [
-"yes|more|slower|cost",
-"column|field",
-"index|network|IO|bandwidth|covering"
-]
-},
-{
-"id": "qk06",
-"cat": "quick",
-"q": "When does a Python `finally` block not run?",
-"must": [
-"os\\._exit|_exit|SystemExit|kill|signal|crash|interpreter",
-"finally"
-]
-},
-{
-"id": "dc01",
-"cat": "decide",
-"q": "UUID or auto-increment integer for a primary key in Postgres? Pick one.",
-"must": [
-"UUID|integer|bigint|identity",
-"index|locality|size|page|insert",
-"recommend|use|pick|choose|prefer"
-]
-},
-{
-"id": "dc02",
-"cat": "decide",
-"q": "We have one server and 50k rows. Postgres or SQLite? Pick one.",
-"must": [
-"SQLite|Postgres",
-"single|one (server|node)|concurren",
-"recommend|use|pick|choose|start"
-]
-},
-{
-"id": "dc03",
-"cat": "decide",
-"q": "New Python project: pytest or unittest? Pick one and say why.",
-"must": [
-"pytest|unittest",
-"fixture|assert|plugin|stdlib",
-"recommend|use|pick|choose"
-]
-},
-{
-"id": "dc04",
-"cat": "decide",
-"q": "Should retries live in the HTTP client or in each caller? Pick one.",
-"must": [
-"client|caller",
-"idempoten|duplicat|side effect",
-"recommend|use|pick|choose|put"
-]
-},
-{
-"id": "rv01",
-"cat": "review",
-"q": "Review this: `def second(s): return s.split(',')[1]`",
-"must": [
-"IndexError|index|out of range|missing|only one|no comma",
-"strip|whitespace|type|None|empty"
-]
-},
-{
-"id": "rv02",
-"cat": "review",
-"q": "Review this: `cur.execute(\"SELECT * FROM users WHERE name='\" + name + \"'\")`",
-"must": [
-"inject",
-"parameter|placeholder|bind|prepared|%s|\\?"
-]
-},
-{
-"id": "rv03",
-"cat": "review",
-"q": "Review this: `try: do_work()\\nexcept Exception: pass`",
-"must": [
-"swallow|silent|hide|mask|bare|broad",
-"log|raise|re-?raise|specific"
-]
-},
-{
-"id": "rv04",
-"cat": "review",
-"q": "Review this: `for u in users: db.save(u)` inside a request handler.",
-"must": [
-"N\\+1|batch|bulk|loop|round ?trip",
-"transaction|single|one (query|statement)|executemany"
-]
-},
-{
-"id": "st01",
-"cat": "status",
-"q": "You changed 3 files to fix a null check, and one test still fails. Report that.",
-"must": [
-"3|three",
-"null|nil|None",
-"fail",
-"test"
-]
-},
-{
-"id": "st02",
-"cat": "status",
-"q": "A migration adds a column and backfills 2M rows. Write the changelog entry.",
-"must": [
-"column|add",
-"backfill|migrat",
-"2M|2,000,000|2 million|two million"
-]
-},
-{
-"id": "doc02",
-"cat": "doc",
-"q": "Write the docstring for a function that parses an ISO 8601 duration into seconds.",
-"must": [
-"ISO ?8601|duration",
-"second",
-"raise|error|invalid|ValueError"
-]
-},
-{
-"id": "doc03",
-"cat": "doc",
-"q": "Write the commit message for a change that fixes a race in the connection pool.",
-"must": [
-"race|concurren",
-"pool|connection",
-"fix"
-]
-}
+  {
+    "id": "ex01",
+    "cat": "explain",
+    "q": "Explain what Rust's ? operator does and when to use it instead of match.",
+    "must": [
+      "\\?",
+      "match",
+      "Result|Option",
+      "Err|error",
+      "return|propagat|bail"
+    ]
+  },
+  {
+    "id": "ex02",
+    "cat": "explain",
+    "q": "Explain the difference between a process and a thread.",
+    "must": [
+      "process",
+      "thread",
+      "memory|address space",
+      "schedul|CPU|kernel",
+      "share|isolat"
+    ]
+  },
+  {
+    "id": "ex03",
+    "cat": "explain",
+    "q": "Explain what a database index is and what it costs you.",
+    "must": [
+      "index",
+      "lookup|read|query|search",
+      "write|insert|update",
+      "disk|space|storage",
+      "B-?tree|scan"
+    ]
+  },
+  {
+    "id": "ex04",
+    "cat": "explain",
+    "q": "Explain what TCP backpressure is.",
+    "must": [
+      "backpressure|back-pressure",
+      "window|buffer",
+      "sender|producer",
+      "receiv|consum",
+      "slow|throttl|block"
+    ]
+  },
+  {
+    "id": "ex05",
+    "cat": "explain",
+    "q": "Explain how HTTP cache validation with ETag works.",
+    "must": ["ETag", "If-None-Match", "304", "header", "hash|version|token"]
+  },
+  {
+    "id": "ex06",
+    "cat": "explain",
+    "q": "Explain what a memory barrier does in concurrent code.",
+    "must": [
+      "barrier|fence",
+      "reorder",
+      "memory",
+      "CPU|compiler",
+      "order|visib"
+    ]
+  },
+  {
+    "id": "cmp01",
+    "cat": "compare",
+    "q": "Compare Arc<Mutex<T>> versus channels for sharing state across threads.",
+    "must": [
+      "Arc",
+      "Mutex",
+      "channel",
+      "lock|contention|block",
+      "own|move|send"
+    ]
+  },
+  {
+    "id": "cmp02",
+    "cat": "compare",
+    "q": "Compare REST and gRPC for an internal service API.",
+    "must": [
+      "REST",
+      "gRPC",
+      "HTTP|protobuf|HTTP/2",
+      "schema|contract|IDL|proto",
+      "stream|latency|performance"
+    ]
+  },
+  {
+    "id": "cmp03",
+    "cat": "compare",
+    "q": "Compare optimistic and pessimistic locking in a database.",
+    "must": [
+      "optimistic",
+      "pessimistic",
+      "version|timestamp|conflict",
+      "lock",
+      "retry|abort|rollback"
+    ]
+  },
+  {
+    "id": "cmp04",
+    "cat": "compare",
+    "q": "Compare a monorepo and multiple repos for a 5-person team.",
+    "must": [
+      "monorepo",
+      "multi|separate|poly",
+      "build|CI|tooling",
+      "depend|version",
+      "atomic|coordinat"
+    ]
+  },
+  {
+    "id": "cmp05",
+    "cat": "compare",
+    "q": "Compare Vec and VecDeque in Rust.",
+    "must": [
+      "Vec",
+      "VecDeque",
+      "push|pop|front|back",
+      "ring|contiguous|slice",
+      "O\\(1\\)|amortiz|complexity"
+    ]
+  },
+  {
+    "id": "cmp06",
+    "cat": "compare",
+    "q": "Compare unit tests and integration tests in a Rust project.",
+    "must": [
+      "unit",
+      "integration",
+      "tests/|src/|module",
+      "private|public|API",
+      "cfg\\(test\\)|crate"
+    ]
+  },
+  {
+    "id": "dbg01",
+    "cat": "debug",
+    "q": "My Rust build fails with: error[E0382]: borrow of moved value: `config`. What causes this and how do I fix it?",
+    "must": [
+      "E0382|move",
+      "borrow",
+      "clone|reference|&|Rc|Arc",
+      "owner",
+      "fix|use"
+    ]
+  },
+  {
+    "id": "dbg02",
+    "cat": "debug",
+    "q": "A Postgres query got 100x slower after a deploy. Where do I look first?",
+    "must": [
+      "EXPLAIN|plan",
+      "index",
+      "statistic|ANALYZE|vacuum",
+      "row|cardinal|estimate",
+      "seq|scan"
+    ]
+  },
+  {
+    "id": "dbg03",
+    "cat": "debug",
+    "q": "My Docker container exits immediately with code 0. What are the likely causes?",
+    "must": [
+      "exit|code 0",
+      "foreground|background|daemon",
+      "PID 1|entrypoint|CMD",
+      "process|command",
+      "end|finish|complete"
+    ]
+  },
+  {
+    "id": "dbg04",
+    "cat": "debug",
+    "q": "A test passes locally but fails in CI with a timeout. How do I diagnose it?",
+    "must": [
+      "CI|local",
+      "timeout",
+      "race|order|paralle|flaky",
+      "resource|slow|memory|CPU",
+      "log|reproduce|env"
+    ]
+  },
+  {
+    "id": "dbg05",
+    "cat": "debug",
+    "q": "I get 'too many open files' in a Rust server under load. What is wrong?",
+    "must": [
+      "file descriptor|fd|ulimit",
+      "leak|close|drop",
+      "limit",
+      "socket|connection",
+      "raise|increase|fix"
+    ]
+  },
+  {
+    "id": "dbg06",
+    "cat": "debug",
+    "q": "A git rebase left me with 'detached HEAD'. How do I recover my work?",
+    "must": [
+      "detached HEAD",
+      "branch",
+      "git checkout|git switch|git branch",
+      "reflog|commit",
+      "recover|save"
+    ]
+  },
+  {
+    "id": "rep01",
+    "cat": "report",
+    "q": "I added a null check to src/auth.rs line 42. The test suite passes. Give me the status report.",
+    "must": ["src/auth\\.rs", "42|null|check", "test|pass", "Option|null|Rust"]
+  },
+  {
+    "id": "rep02",
+    "cat": "report",
+    "q": "I refactored src/db/pool.rs to add exponential backoff, max 5 retries. cargo test passes, clippy is clean. Write the commit message.",
+    "must": ["pool\\.rs|pool", "backoff", "retr|5", "exponential"]
+  },
+  {
+    "id": "rep03",
+    "cat": "report",
+    "q": "Summarize this for a PR body: renamed Config to Settings across 12 files, updated docs, no behavior change.",
+    "must": [
+      "Config",
+      "Settings",
+      "12|files",
+      "doc",
+      "behavior|behaviour|no change"
+    ]
+  },
+  {
+    "id": "rep04",
+    "cat": "report",
+    "q": "Write the release note for: fixed a crash on empty input, added --json flag, dropped Python 3.8 support.",
+    "must": [
+      "crash|empty",
+      "--json",
+      "3\\.8|Python",
+      "drop|remov|support",
+      "fix|add"
+    ]
+  },
+  {
+    "id": "enum01",
+    "cat": "enumerate",
+    "q": "List the things that make a Dockerfile build slowly and how to fix each.",
+    "must": [
+      "layer|cache",
+      "COPY|order",
+      "multi-?stage",
+      "dependenc|install",
+      ".dockerignore|context"
+    ]
+  },
+  {
+    "id": "enum02",
+    "cat": "enumerate",
+    "q": "List the checks a code reviewer should run on a database migration.",
+    "must": [
+      "lock|blocking|downtime",
+      "rollback|revert|down",
+      "index|constraint",
+      "data|backfill",
+      "size|duration|large"
+    ]
+  },
+  {
+    "id": "enum03",
+    "cat": "enumerate",
+    "q": "List the ways a Rust program can panic and how to avoid each.",
+    "must": [
+      "unwrap|expect",
+      "index|slice|bound",
+      "overflow|arithmetic|divide",
+      "assert|panic!",
+      "Result|Option|checked_|get\\("
+    ]
+  },
+  {
+    "id": "enum04",
+    "cat": "enumerate",
+    "q": "List what belongs in a .gitignore for a Rust project and why.",
+    "must": [
+      "target/",
+      "Cargo\\.lock",
+      "\\.env|secret",
+      "editor|\\.idea|\\.vscode|DS_Store",
+      "build|artifact"
+    ]
+  },
+  {
+    "id": "des01",
+    "cat": "design",
+    "q": "Design the error type for a CLI tool that reads config, hits an API, and writes files.",
+    "must": [
+      "enum|variant|type",
+      "config|parse",
+      "network|API|HTTP",
+      "IO|io::Error|file",
+      "From|source|thiserror|Display"
+    ]
+  },
+  {
+    "id": "des02",
+    "cat": "design",
+    "q": "Design a retry policy for a flaky HTTP client. What are the parameters?",
+    "must": [
+      "backoff|exponential",
+      "jitter|random",
+      "max|attempt|retr",
+      "timeout|deadline",
+      "idempotent|status|5xx|429"
+    ]
+  },
+  {
+    "id": "des03",
+    "cat": "design",
+    "q": "Design the CLI flags for a tool that syncs a local folder to S3.",
+    "must": [
+      "--dry-run|dry",
+      "--delete|delete",
+      "bucket|prefix|path",
+      "--exclude|--include|filter",
+      "concurren|--jobs|parallel"
+    ]
+  },
+  {
+    "id": "err01",
+    "cat": "errmsg",
+    "q": "Write the error message a user sees when their config file has an invalid port number.",
+    "must": [
+      "port",
+      "config|file|path",
+      "line|:|found|invalid",
+      "range|65535|number|integer"
+    ]
+  },
+  {
+    "id": "err02",
+    "cat": "errmsg",
+    "q": "Write the CLI help text for a `deploy` command with flags for env, dry-run, and timeout.",
+    "must": ["deploy", "--env|-e", "--dry-run", "--timeout", "default|usage"]
+  },
+  {
+    "id": "doc01",
+    "cat": "doc",
+    "q": "Write the README intro paragraph for a Rust CLI that converts CSV to Parquet.",
+    "must": [
+      "CSV",
+      "Parquet",
+      "Rust|CLI|command",
+      "convert|transform",
+      "install|cargo|usage"
+    ]
+  },
+  {
+    "id": "qk01",
+    "cat": "quick",
+    "q": "Does `git revert` rewrite history?",
+    "must": ["no|does not|doesn't", "new commit", "history|rewrit"]
+  },
+  {
+    "id": "qk02",
+    "cat": "quick",
+    "q": "What does HTTP 429 mean, and what should a client do?",
+    "must": [
+      "too many|rate limit",
+      "retry|back ?off|wait",
+      "Retry-After|header|delay"
+    ]
+  },
+  {
+    "id": "qk03",
+    "cat": "quick",
+    "q": "Is it safe for two goroutines to write to the same map?",
+    "must": ["no|not safe|unsafe", "race|concurrent", "mutex|sync\\.|channel"]
+  },
+  {
+    "id": "qk04",
+    "cat": "quick",
+    "q": "What is the difference between `COPY` and `ADD` in a Dockerfile?",
+    "must": ["COPY", "ADD", "extract|tar|URL|remote"]
+  },
+  {
+    "id": "qk05",
+    "cat": "quick",
+    "q": "Does `SELECT *` cost more than naming the columns?",
+    "must": [
+      "yes|more|slower|cost",
+      "column|field",
+      "index|network|IO|bandwidth|covering"
+    ]
+  },
+  {
+    "id": "qk06",
+    "cat": "quick",
+    "q": "When does a Python `finally` block not run?",
+    "must": [
+      "os\\._exit|_exit|SystemExit|kill|signal|crash|interpreter",
+      "finally"
+    ]
+  },
+  {
+    "id": "dc01",
+    "cat": "decide",
+    "q": "UUID or auto-increment integer for a primary key in Postgres? Pick one.",
+    "must": [
+      "UUID|integer|bigint|identity",
+      "index|locality|size|page|insert",
+      "recommend|use|pick|choose|prefer"
+    ]
+  },
+  {
+    "id": "dc02",
+    "cat": "decide",
+    "q": "We have one server and 50k rows. Postgres or SQLite? Pick one.",
+    "must": [
+      "SQLite|Postgres",
+      "single|one (server|node)|concurren",
+      "recommend|use|pick|choose|start"
+    ]
+  },
+  {
+    "id": "dc03",
+    "cat": "decide",
+    "q": "New Python project: pytest or unittest? Pick one and say why.",
+    "must": [
+      "pytest|unittest",
+      "fixture|assert|plugin|stdlib",
+      "recommend|use|pick|choose"
+    ]
+  },
+  {
+    "id": "dc04",
+    "cat": "decide",
+    "q": "Should retries live in the HTTP client or in each caller? Pick one.",
+    "must": [
+      "client|caller",
+      "idempoten|duplicat|side effect",
+      "recommend|use|pick|choose|put"
+    ]
+  },
+  {
+    "id": "rv01",
+    "cat": "review",
+    "q": "Review this: `def second(s): return s.split(',')[1]`",
+    "must": [
+      "IndexError|index|out of range|missing|only one|no comma",
+      "strip|whitespace|type|None|empty"
+    ]
+  },
+  {
+    "id": "rv02",
+    "cat": "review",
+    "q": "Review this: `cur.execute(\"SELECT * FROM users WHERE name='\" + name + \"'\")`",
+    "must": ["inject", "parameter|placeholder|bind|prepared|%s|\\?"]
+  },
+  {
+    "id": "rv03",
+    "cat": "review",
+    "q": "Review this: `try: do_work()\\nexcept Exception: pass`",
+    "must": [
+      "swallow|silent|hide|mask|bare|broad",
+      "log|raise|re-?raise|specific"
+    ]
+  },
+  {
+    "id": "rv04",
+    "cat": "review",
+    "q": "Review this: `for u in users: db.save(u)` inside a request handler.",
+    "must": [
+      "N\\+1|batch|bulk|loop|round ?trip",
+      "transaction|single|one (query|statement)|executemany"
+    ]
+  },
+  {
+    "id": "st01",
+    "cat": "status",
+    "q": "You changed 3 files to fix a null check, and one test still fails. Report that.",
+    "must": ["3|three", "null|nil|None", "fail", "test"]
+  },
+  {
+    "id": "st02",
+    "cat": "status",
+    "q": "A migration adds a column and backfills 2M rows. Write the changelog entry.",
+    "must": [
+      "column|add",
+      "backfill|migrat",
+      "2M|2,000,000|2 million|two million"
+    ]
+  },
+  {
+    "id": "doc02",
+    "cat": "doc",
+    "q": "Write the docstring for a function that parses an ISO 8601 duration into seconds.",
+    "must": ["ISO ?8601|duration", "second", "raise|error|invalid|ValueError"]
+  },
+  {
+    "id": "doc03",
+    "cat": "doc",
+    "q": "Write the commit message for a change that fixes a race in the connection pool.",
+    "must": ["race|concurren", "pool|connection", "fix"]
+  }
 ]

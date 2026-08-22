@@ -66,7 +66,38 @@ VAGUE = (r"\bthe (?:relevant|appropriate|corresponding|necessary|applicable|"
          r"\bthe \w+ in question\b|"
          r"\bthe thing (?:that|which)\b")
 
+# Rhetorical inversion. Each frame states a thing by negating another, which
+# reads as insight and costs the reader a second pass.
+#
+# `X, never Y` is deliberately absent. DTS uses it throughout as a direct
+# contrast that carries information, so banning it would fail the standard on
+# its own rule file.
+INVERSION = (
+    # "is not the method, it is the goal" / "not a bug, but a feature"
+    r"\b(?:is|are|was|were)\s+not\s+(?:a|an|the)?[^.,;]{2,40},\s*"
+    r"(?:but|it(?:'s| is)|they(?:'re| are))\b"
+    # "the method, not the goal." / "by request, not by luck."
+    r"|,\s*not\s+(?:a|an|the|by|for|from|about)?\s*\w+\s*[.!?]"
+    # "is not the same as", "is no more X than Y"
+    r"|\bis\s+not\s+the\s+same\s+as\b"
+    r"|\bis\s+no\s+more\b[^.]{3,40}\bthan\b"
+    # "A standard you have to invoke is a standard you forget"
+    r"|\b(?:a|an)\s+(\w+)\b[^.,;]{3,40}\bis\s+(?:a|an)\s+\1\b"
+    # "not because it is X, but because it is Y"
+    r"|\bnot\s+because\b[^.]{3,60}\bbut\s+because\b"
+    # Fronted negation followed by an assertion:
+    #   "Not a mere suggestion, the style guide is the standard."
+    # The trailing copula is required. Without it this fires on DTS's own
+    # directive idiom, "Never paraphrase them, never re-case them" and
+    # "No apology, no preamble", which are instructions rather than rhetoric.
+    r"|(?:^|(?<=[.!?]\s))\s*(?:not|hardly|scarcely|far from|rather than|"
+    r"more than|less than|beyond|instead of)\b[^.!?]{3,70},[^.!?]{0,40}?"
+    r"\b(?:is|are|was|were|becomes?|serves?|functions?|represents?|remains?|"
+    r"acts?|forms?|means?)\b"
+)
+
 RULES = [
+    ("inversion",   INVERSION),
     ("vague-reference", VAGUE),
     ("modal",       r"\b(should|would|may|might|could|shall)\b"),
     ("perfect",     r"\b(has|have|had) been\b|\bis to be\b|\bwas being\b"),

@@ -1,14 +1,35 @@
 [
-{"id":"pt01","cat":"ptes",
- "q":"Here is the whole file `src/pool.rs`. Line 3 deadlocks when the pool is exhausted. Explain the fix. Do not reproduce the file.\n\n```rust\n1  pub fn acquire(&self) -> Conn {\n2      let mut g = self.lock.lock().unwrap();\n3      while g.free.is_empty() { g = self.cv.wait(g).unwrap(); }\n4      g.free.pop().unwrap()\n5  }\n```",
- "must":["pool\\.rs","timeout|wait_timeout|bound|capacity|deadlock"]},
-{"id":"pt02","cat":"ptes",
- "q":"Here is the whole file `handlers.py`. Line 2 raises `KeyError: 'user_id'`. What do I change? Do not reproduce the file.\n\n```python\n1  def handle(req):\n2      uid = req.json()['user_id']\n3      return lookup(uid)\n```",
- "must":["handlers\\.py","get\\(|KeyError|missing|400|validate"]},
-{"id":"pt03","cat":"ptes",
- "q":"Should I use `unwrap()` in a library crate? Answer for a Rust developer who already knows what unwrap does.",
- "must":["unwrap","panic","library|crate|caller","Result|expect|propagat"]},
-{"id":"pt04","cat":"ptes",
- "q":"How do I delete all rows older than 30 days from a large production Postgres table? No codebase, answer generally.",
- "must":["DELETE|delete","batch|chunk|LIMIT|partition","lock|replica|index|backup|vacuum|bloat"]}
+  {
+    "id": "pt01",
+    "cat": "ptes",
+    "q": "Here is the whole file `src/pool.rs`. Line 3 deadlocks when the pool is exhausted. Explain the fix. Do not reproduce the file.\n\n```rust\n1  pub fn acquire(&self) -> Conn {\n2      let mut g = self.lock.lock().unwrap();\n3      while g.free.is_empty() { g = self.cv.wait(g).unwrap(); }\n4      g.free.pop().unwrap()\n5  }\n```",
+    "must": ["pool\\.rs", "timeout|wait_timeout|bound|capacity|deadlock"]
+  },
+  {
+    "id": "pt02",
+    "cat": "ptes",
+    "q": "Here is the whole file `handlers.py`. Line 2 raises `KeyError: 'user_id'`. What do I change? Do not reproduce the file.\n\n```python\n1  def handle(req):\n2      uid = req.json()['user_id']\n3      return lookup(uid)\n```",
+    "must": ["handlers\\.py", "get\\(|KeyError|missing|400|validate"]
+  },
+  {
+    "id": "pt03",
+    "cat": "ptes",
+    "q": "Should I use `unwrap()` in a library crate? Answer for a Rust developer who already knows what unwrap does.",
+    "must": [
+      "unwrap",
+      "panic",
+      "library|crate|caller",
+      "Result|expect|propagat"
+    ]
+  },
+  {
+    "id": "pt04",
+    "cat": "ptes",
+    "q": "How do I delete all rows older than 30 days from a large production Postgres table? No codebase, answer generally.",
+    "must": [
+      "DELETE|delete",
+      "batch|chunk|LIMIT|partition",
+      "lock|replica|index|backup|vacuum|bloat"
+    ]
+  }
 ]

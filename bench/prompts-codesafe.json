@@ -1,13 +1,39 @@
 [
-{"id":"code01","cat":"codesafe",
- "q":"Add doc comments to this Rust function. Return the complete function.\n\n```rust\npub fn parse_port(s: &str) -> Result<u16, ConfigError> {\n    let n: u32 = s.trim().parse().map_err(|_| ConfigError::NotANumber)?;\n    if n == 0 || n > 65535 {\n        return Err(ConfigError::OutOfRange(n));\n    }\n    Ok(n as u16)\n}\n```",
- "must":["pub fn parse_port","ConfigError::NotANumber","65535","ConfigError::OutOfRange","Ok\\(n as u16\\)","///|//!|//"]},
-
-{"id":"code02","cat":"codesafe",
- "q":"Refactor this Rust function to use the ? operator instead of match. Return the complete function.\n\n```rust\npub fn load_config(path: &Path) -> Result<Config, ConfigError> {\n    let text = match fs::read_to_string(path) {\n        Ok(t) => t,\n        Err(e) => return Err(ConfigError::Io(e)),\n    };\n    let cfg = match toml::from_str(&text) {\n        Ok(c) => c,\n        Err(e) => return Err(ConfigError::Parse(e)),\n    };\n    Ok(cfg)\n}\n```",
- "must":["pub fn load_config","read_to_string","toml::from_str","\\?","Ok\\(cfg\\)|Ok\\("]},
-
-{"id":"code03","cat":"codesafe",
- "q":"This Python function has a bug on the retry loop. Fix it and return the complete function.\n\n```python\ndef fetch_with_retry(url, attempts=3, backoff=0.5):\n    for i in range(attempts):\n        try:\n            return requests.get(url, timeout=10)\n        except requests.RequestException:\n            time.sleep(backoff)\n    return None\n```",
- "must":["def fetch_with_retry","requests.get","RequestException","time.sleep","backoff|2 \\*\\*|attempt"]}
+  {
+    "id": "code01",
+    "cat": "codesafe",
+    "q": "Add doc comments to this Rust function. Return the complete function.\n\n```rust\npub fn parse_port(s: &str) -> Result<u16, ConfigError> {\n    let n: u32 = s.trim().parse().map_err(|_| ConfigError::NotANumber)?;\n    if n == 0 || n > 65535 {\n        return Err(ConfigError::OutOfRange(n));\n    }\n    Ok(n as u16)\n}\n```",
+    "must": [
+      "pub fn parse_port",
+      "ConfigError::NotANumber",
+      "65535",
+      "ConfigError::OutOfRange",
+      "Ok\\(n as u16\\)",
+      "///|//!|//"
+    ]
+  },
+  {
+    "id": "code02",
+    "cat": "codesafe",
+    "q": "Refactor this Rust function to use the ? operator instead of match. Return the complete function.\n\n```rust\npub fn load_config(path: &Path) -> Result<Config, ConfigError> {\n    let text = match fs::read_to_string(path) {\n        Ok(t) => t,\n        Err(e) => return Err(ConfigError::Io(e)),\n    };\n    let cfg = match toml::from_str(&text) {\n        Ok(c) => c,\n        Err(e) => return Err(ConfigError::Parse(e)),\n    };\n    Ok(cfg)\n}\n```",
+    "must": [
+      "pub fn load_config",
+      "read_to_string",
+      "toml::from_str",
+      "\\?",
+      "Ok\\(cfg\\)|Ok\\("
+    ]
+  },
+  {
+    "id": "code03",
+    "cat": "codesafe",
+    "q": "This Python function has a bug on the retry loop. Fix it and return the complete function.\n\n```python\ndef fetch_with_retry(url, attempts=3, backoff=0.5):\n    for i in range(attempts):\n        try:\n            return requests.get(url, timeout=10)\n        except requests.RequestException:\n            time.sleep(backoff)\n    return None\n```",
+    "must": [
+      "def fetch_with_retry",
+      "requests.get",
+      "RequestException",
+      "time.sleep",
+      "backoff|2 \\*\\*|attempt"
+    ]
+  }
 ]

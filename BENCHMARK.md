@@ -79,6 +79,29 @@ DTS and ASD-STE100 sit level here, at 0.18 and 0.19. On the benchmark they score
 
 Concise scores 1.05, above ELI5, and still wins the quality table. Its rules are not DTS's rules. This measures distance from the DTS grammar, never how well an arm followed its own.
 
+## The inversion rule
+
+`Say it straight` bans a sentence that says what something is by first saying what it is not. `not X, but Y`. `the method, not the goal`. [`bench/lint.py`](bench/lint.py) finds some of them. The check also runs on the standard's own files, so DTS cannot break a rule it ships.
+
+Detection is measured on text the pattern was never tuned against, in [`tests/fixtures-inversion.json`](tests/fixtures-inversion.json).
+
+| Measure                              | Result  |
+| ------------------------------------ | ------- |
+| Recall, 40 unseen inversions         | **20%** |
+| False positives, 40 plain statements | **0%**  |
+
+Use it to confirm a problem. Never use it to confirm there is none. A passing run means the four commonest shapes are absent. It says nothing about the rest.
+
+It misses sentences that bury the negation in the middle, such as `It is not the pursuit of perfection that guides the work, but the discipline`. A regular expression cannot find those.
+
+Two shapes are allowed on purpose. `X, never Y` states a direct contrast, and DTS uses it throughout. `Never paraphrase them, never re-case them` is an instruction. An early pattern flagged both.
+
+An earlier version scored 85% against the six sentences used to write it, then 0% against the first unseen set. Tuning a detector on its own test set measures nothing.
+
+Whether the rule changes what a model writes is untested. [`bench/prompts-inversion.json`](bench/prompts-inversion.json) ran on glm-5.2 across 6 prompts and 3 reps. Both arms wrote zero inversions. glm does not write them, so this corpus cannot show whether the rule stops them.
+
+Every case the rule was written for was Claude Opus 5 writing documentation. Testing it needs that model and that task.
+
 ## What this does not prove
 
 - Savings depend on your model and your harness, not on the standard alone. Treat every number here as one setup measured once, and run the benchmark on yours.
