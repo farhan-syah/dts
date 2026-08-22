@@ -13,10 +13,15 @@ Models are `provider:model` specs resolved through config.toml. Judge with a
 model that did not write the answers, or self-preference bias inflates the
 writing model's own scores.
 
+Never judge with Opus. It is the model under test, and it is the most expensive
+grader available. A `claude:*` judge spawns one CLI process per answer, so raise
+`--jobs` well above the default there.
+
 Usage:
+  ./judge.py out/opus.json --judge-model ollama:deepseek-v4-pro:cloud --jobs 3
+  ./judge.py out/ds.json   --judge-model ollama:glm-5.2:cloud --jobs 3
+  ./judge.py out/glm.json  --judge-model claude:sonnet --jobs 8
   ./judge.py                                    # first judge.models, out/results.json
-  ./judge.py out/full.json --judge-model ollama:kimi-k3:cloud --jobs 3
-  ./judge.py out/full.json --judge-model anthropic:claude-sonnet-5
 """
 import argparse, json, os, random, sys, time
 from concurrent.futures import ThreadPoolExecutor

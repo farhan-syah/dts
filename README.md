@@ -1,53 +1,83 @@
 # DTS — Dense Technical Syntax
 
-An always-on output policy for coding agents.
+A writing standard for AI coding agents. It governs every surface the agent writes to — chat replies, commit messages, PR bodies, code comments, documentation, error strings — from one install, with nothing to invoke per task.
 
-Your agent writes too much. This makes it write less everywhere it writes — replies, commit messages, PR bodies, code comments, docs, error strings — from one install, with nothing to invoke and nothing to remember.
+Agent output has grown more verbose with each model generation. The available remedies trade brevity against content: an "explain like I'm five" prompt drops about 30% of the facts in an answer, and ASD-STE100 keeps its content but does not shorten the output.
 
-**In conversation it cut output tokens 12% to 83% and held 96% to 101% of the judge score. Inside an agent loop it writes 14% less prose and costs nothing extra.**
+DTS retains 95% or more of the required facts. Output falls by a median of 10% on Claude Opus 5 and 83% on glm-5.2, and the spread per prompt is wide in both.
 
-Those are two different surfaces with two different answers. Every number ships with the benchmark that produced it. Run both on your own model.
+Every figure here comes from the benchmark in [`bench/`](bench/). How it works is in [MECHANISM.md](MECHANISM.md); how it was measured is in [BENCHMARK.md](BENCHMARK.md).
 
-## How it is built
+## Before and after
 
-| Layer                      | Loaded     | Cost                       | Owns                                   |
-| -------------------------- | ---------- | -------------------------- | -------------------------------------- |
-| [Core rules](rules/dts.md) | every turn | ~1000 input tokens, cached | every surface, always                  |
-| [Skill](skills/dts/)       | on demand  | nothing until called       | full spec, audits, per-artifact shapes |
-| [Your overlays](overlays/) | every turn | yours                      | domain exceptions, other languages     |
+Left column is real unedited Claude Opus 5 output. Right column is the same model with DTS as its system prompt. Nothing else loaded, nothing truncated.
 
-The core is small enough to leave on. Depth sits in the skill, which costs nothing until something calls it. Your exceptions sit in an overlay the installer never touches.
+<table>
+<tr><th width="50%">README opening — 587 tokens</th><th width="50%">with DTS — 445 tokens</th></tr>
+<tr>
+<td valign="top">
 
-That split is the point. A standard you have to invoke is a standard you forget.
+> This tool streams tables out of a Postgres database and lands them in S3 as Parquet or CSV, reading in bounded chunks so that a hundred-gigabyte table costs about as much memory as a small one and nothing is staged on local disk. It is meant for the unglamorous middle of a data pipeline — nightly snapshots, one-off extracts for analysts, seeding a warehouse before a backfill — where what you want is a single command with a predictable output layout, not another long-running service to operate.
+
+</td>
+<td valign="top">
+
+> This tool copies Postgres tables to S3 as Parquet or CSV files. Rows stream in fixed-size batches, so memory use stays flat no matter how large the table.
+
+</td>
+</tr>
+<tr><th width="50%">Incident update — 830 tokens</th><th width="50%">with DTS — 128 tokens</th></tr>
+<tr>
+<td valign="top">
+
+> Between 14:00 and 14:29 UTC today, approximately 12% of incoming requests failed, returning errors or timing out. The issue has been resolved and the service has been operating normally since 14:29. No data was lost, and requests that succeeded during the window were processed correctly.
+>
+> The trigger was a routine deploy that went out at 14:00. That change inadvertently removed the cache warmup step that runs as part of application startup, so the new instances came up with empty caches and passed traffic straight through to the primary datastore. The resulting load pushed query latency past our timeout thresholds, and a portion of requests began failing almost immediately. Because the failures were tied to cache misses rather than a hard outage, the impact was partial and intermittent rather than total, which is why most users saw only occasional errors while a smaller group hit them repeatedly.
+>
+> Our alerting fired within a few minutes of the deploy on elevated error rate. The on-call engineer correlated the spike with the 14:00 release, initiated a revert at 14:27, and the previous build was fully rolled out shortly after. Caches repopulated within about two minutes of the revert completing, and error rates returned to baseline by 14:29, giving a total impact window of 29 minutes.
+>
+> We are treating the root cause as a gap in our deploy validation rather than the change itself. The warmup step was removed without any check that would catch its absence, so we are adding a startup assertion that fails the deploy if warmup does not run, along with a canary stage that holds a small share of traffic long enough for cold-cache effects to surface before a full rollout. We are also reviewing our timeout and retry configuration, since the datastore was under strain but never unavailable, and better degradation behavior would have reduced the share of failed requests. A full postmortem will follow within the week, and we apologize for the disruption.
+
+</td>
+<td valign="top">
+
+> Between 14:00 and 14:29 UTC, 12% of requests failed. A deploy at 14:00 removed the cache warmup step, so cold caches drove request timeouts. We reverted the deploy at 14:27, and error rates returned to baseline within two minutes. No data loss occurred. We are restoring the warmup step with a deploy-time check that blocks release if it is absent.
+
+</td>
+</tr>
+</table>
+
+87 words to 28, and 325 to 60. Both right-hand answers keep every fact the left one carries.
+
+DTS does not always cut this hard. Asked for a database error message it saves nine words, and spends them naming the exact config file and the command to recheck. Brevity is the method, not the goal.
+
+More examples, every standard, complete replies: [EXAMPLES.md](EXAMPLES.md).
 
 ## Why this exists
 
-Cutting tokens has meant choosing between two bad deals.
+Four approaches are in common use. Each has a documented cost.
 
-### 1. Simple, but worse output
+**ELI5 prompts.** A one-line config change, and the shortest path to a shorter agent. Fact retention falls to 70% and the judge score to 14.3 out of 20. The output is short because it carries less.
 
-Paste "explain like I'm five" into your config. You are done in a minute.
+**[ASD-STE100](https://asd-ste100.org).** The aerospace controlled-language standard. Its grammar rules are sound and it retains 88% of facts. It is not a brevity measure: its dictionary bans common verbs, so `check the config` becomes `do a check of the config`, and it renders `&` as `the ampersand symbol`.
 
-Your agent then scores 14.3 out of 20. It drops a third of the facts you asked for.
-
-ASD-STE100 does better at 17.9. But it writes `the ampersand symbol` where an engineer needed `&`.
-
-### 2. Good output, but real setup
-
-Caveman ships twenty skills. Its main skill tightens conversation, then exempts everything else on purpose:
+**[Caveman](https://github.com/JuliusBrussee/caveman).** Twenty skills with per-task intensity levels. Its main skill governs conversation and exempts persisted text by design:
 
 > Persisted outside chat: write normal prose — code, comments, commits, docs, issue/PR/MR text, memory files.
 
-So your commit messages stay long until you remember `caveman-commit`. Whatever you forget stays full length.
+Commit messages and documentation stay at full length unless the matching skill is invoked.
 
-### DTS takes the first deal and removes the cost
+**Claude Code's built-in `Concise` style.** Introduced in 2.1.237. It scores 19.2 and retains 97% of facts, the strongest result of any alternative measured here. An output style edits the system prompt, so it governs files and commit messages as well as replies. Two limits: it exists only in Claude Code, and it stops at the main conversation. Every subagent you delegate to writes unconstrained prose.
 
-| Approach   | Setup           | Judge /20 | Covers your docs and commits |
-| ---------- | --------------- | --------- | ---------------------------- |
-| ELI5       | one prompt      | 14.3      | yes                          |
-| Caveman    | twenty skills   | 17.1      | only when you invoke them    |
-| ASD-STE100 | one prompt      | 17.9      | yes                          |
-| **DTS**    | **one install** | **18.7**  | **yes, always**              |
+### Where DTS sits
+
+| Approach   | Setup           | Judge /20 | Facts kept | Covers docs and commits   |
+| ---------- | --------------- | --------- | ---------- | ------------------------- |
+| ELI5       | one prompt      | 13.7      | 69.7%      | yes                       |
+| ASD-STE100 | one prompt      | 16.4      | 88.0%      | yes                       |
+| Caveman    | twenty skills   | 16.5      | 95.1%      | only when you invoke them |
+| Concise    | one setting     | 19.2      | 97.3%      | main agent, Claude Code only |
+| **DTS**    | **one install** | **18.6**  | **95.1%**  | **main agent and subagents** |
 
 **Want fine control, per-task skills, and intensity levels?** Use [Caveman](https://github.com/JuliusBrussee/caveman).
 
@@ -128,6 +158,7 @@ If your agent is not in the table, it almost certainly reads a global instructio
 
 ```markdown
 <!-- dts:start -->
+
 ## Output Standard (DTS 1.0)
 
 Governs every English word this agent writes for engineers and agents: replies in conversation, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.
@@ -178,108 +209,68 @@ Only Claude Code has an output style. Every other agent gets the same rules thro
 
 ## What you save
 
-Two surfaces, two answers. Do not carry a number from one to the other.
+Savings depend on your model and on what you asked. Quality held in both setups.
 
-### In conversation
+| Your setup          | Median cut | Range across 50 prompts | Cuts output on | Facts kept |
+| ------------------- | ---------- | ----------------------- | -------------- | ---------- |
+| glm-5.2             | **-83%**   | -95% to -36%            | 50 of 50       | 95.1%      |
+| Claude Opus 5, bare | **-10%**   | -49% to **+57%**        | 34 of 50       | **97.8%**  |
 
-Savings depend on your model. In the three setups below, quality held.
+A model that pads gets padding removed, everywhere. Opus already writes densely, so the result depends on the request:
 
-| Your setup                  | Before      | After | Saved    | Quality kept |
-| --------------------------- | ----------- | ----- | -------- | ------------ |
-| glm-5.2                     | 1076 tokens | 190   | **-82%** | 96%          |
-| Claude Opus, in Claude Code | 926         | 743   | **-20%** | **101%**     |
-| Claude Opus, bare model     | 735         | 645   | **-12%** | 98%          |
+| On Opus, DTS cuts | On Opus, DTS adds |
+| ----------------- | ----------------- |
+| design -25%, enumerate -22%, debug -22%, compare -20% | error messages +25%, quick answers +8%, decisions +8% |
 
-A standard removes padding. It cannot remove padding your model never wrote.
+Long answers compress. Short ones do not, and DTS spends words there on the contrast cases and exact commands a bare model leaves out. The incident update above ran -85% on Opus. A one-line lookup runs positive.
 
-Ask glm-5.2 to explain processes and threads. It opens with a house-and-tenant analogy, a "here is the breakdown" line, then numbered headings.
+Quote a single percentage for a model and you have measured one prompt.
 
-Ask Opus the same thing. You get a one-line definition, a table, and nothing else.
-
-Both answers score 20 out of 20. Opus needs 485 tokens where glm needs 853, so DTS finds far less to cut.
-
-Expect the high end on a smaller or older model. Expect the low end on a frontier model that already writes tightly.
-
-Anyone who gives one number for every model has measured one model. Measure yours.
-
-### Inside an agent loop
-
-A coding agent reads far more than it writes. Across 48 paired sessions on a real repository, every prose measure moved and the bill did not.
-
-| Measure         | Baseline | DTS    | Change     | 95% CI           |
-| --------------- | -------- | ------ | ---------- | ---------------- |
-| Prose written   | 2021 ch  | 1747   | **-13.6%** | [-23.8%, -4.3%]  |
-| Cost            | $0.0880  | 0.0874 | -0.7%      | [-6.5%, +4.6%]   |
-| Turns           | 6.9      | 6.6    | -4.5%      | [-12.0%, +2.1%]  |
-| Tasks completed | 12/12    | 12/12  | —          | —                |
-
-**Output tokens are 0.9% of the tokens in an agent session.** There are 102 tokens read for every one written. Compressing what the agent says cannot move a bill dominated by what it reads, however hard you compress.
-
-So DTS makes an agent write shorter, and charges you nothing for it. That second half is not free elsewhere: Caveman on the same harness cut output tokens 31.5% and moved cost `+9.6%`.
-
-Expect the conversation numbers where you talk to the model. Expect these where it works on your code.
+Inside an agent loop the answer is different: prose falls about 14% and the bill does not move, because output is under 1% of the tokens a session spends. [The detail](MECHANISM.md#inside-an-agent-loop).
 
 ## How it compares
 
-One model wrote 384 answers across 6 arms. **Two** other models graded every one. 64 answers per arm. This section is the conversational benchmark; the agent-loop numbers are above.
+Seven arms, 50 prompts, two reps, 100 answers per arm. Two independent judges scored every answer: `deepseek-v4-pro` and Claude Opus 5. Neither wrote any of them.
 
-Every rival is the real thing people install, copied word for word: [Caveman](https://github.com/JuliusBrussee/caveman), [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish), [ponytail](https://github.com/DietrichGebert/ponytail). Versions are in [`bench/arms/PROVENANCE.md`](bench/arms/PROVENANCE.md).
+Each rival is the artifact people install, copied verbatim — [Caveman](https://github.com/JuliusBrussee/caveman), [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish), [ponytail](https://github.com/DietrichGebert/ponytail), and Claude Code's built-in `Concise`. Versions and commits are in [`bench/arms/PROVENANCE.md`](bench/arms/PROVENANCE.md).
 
-| Standard    | Median tokens | vs baseline | English /5 | Judge /20 |
-| ----------- | ------------- | ----------- | ---------- | --------- |
-| No standard | 1076          | —           | 5.00       | 19.58     |
-| **DTS**     | **190**       | **-82%**    | **5.00**   | **18.74** |
-| ponytail    | 210           | -81%        | 4.97       | 18.59     |
-| ASD-STE100  | 172           | -84%        | 5.00       | 17.90     |
-| Caveman     | 150           | -86%        | 3.80       | 17.12     |
-| ELI5        | 158           | -85%        | 4.40       | 14.33     |
+| Standard    | Tokens, median | vs baseline | Facts kept, mean | English /5 | Judge /20 |
+| ----------- | -------------- | ----------- | ---------------- | ---------- | --------- |
+| Concise     | 231            | -71%        | 97.3%            | 4.98       | 19.18     |
+| No standard | 808            | —           | 98.3%            | 4.97       | 18.93     |
+| **DTS**     | **118**        | **-85%**    | **95.1%**        | **4.97**   | **18.62** |
+| ponytail    | 132            | -84%        | 91.2%            | 4.63       | 17.52     |
+| Caveman     | 114            | -86%        | 95.1%            | 3.39       | 16.48     |
+| ASD-STE100  | 146            | -82%        | 88.0%            | 4.69       | 16.36     |
+| ELI5        | 148            | -82%        | 69.7%            | 4.24       | 13.65     |
 
-**Which gaps are real.** Both judges scored every answer. A paired bootstrap over the same prompts gives:
+Tokens are medians. One truncated answer moves a mean by 70 tokens and cannot move a median. Facts are means, because the median saturates: most answers match every required pattern, so six of the seven arms have a median of exactly 100%.
 
-| Comparison        | Difference | 95% CI         | Verdict               |
-| ----------------- | ---------- | -------------- | --------------------- |
-| DTS vs ELI5       | +4.43      | [+3.71, +5.18] | real                  |
-| DTS vs Caveman    | +1.60      | [+1.06, +2.17] | real                  |
-| DTS vs ASD-STE100 | +0.83      | [+0.40, +1.24] | real                  |
-| DTS vs ponytail   | +0.17      | [-0.29, +0.65] | **too close to call** |
+Paired bootstrap over the same prompts, DTS against each:
 
-**The English stays perfect.** 5.00, same as no rules at all. Caveman drops to 3.80 because it writes fragments.
+| Comparison        | Difference | 95% CI         | Verdict             |
+| ----------------- | ---------- | -------------- | ------------------- |
+| DTS vs ELI5       | +4.97      | [+4.51, +5.43] | real                |
+| DTS vs ASD-STE100 | +2.27      | [+1.81, +2.75] | real                |
+| DTS vs Caveman    | +2.14      | [+1.74, +2.58] | real                |
+| DTS vs ponytail   | +1.10      | [+0.67, +1.55] | real                |
+| DTS vs Concise    | **-0.56**  | [-0.82, -0.30] | real, Concise ahead |
 
-**ponytail is not a rival.** It governs the code an agent writes, not the prose, and its own skill description says not to use it for prose. It is here as a control showing the two do not overlap. Run both.
+Three results are worth reading closely.
 
-### Did the rules actually get followed
+**DTS holds the English.** 4.97 out of 5, the same as an agent running no standard at all. Caveman reaches a shorter answer than DTS and scores 3.39, because it drops articles and inflections. Its own output above reads `git revert create new commit that undo changes`.
 
-Token counts show what an answer cost. They do not show whether your agent followed the rules or just got shorter. [`bench/lint.py`](bench/lint.py) counts rule breaks per 100 words.
+**Caveman keeps the same facts DTS does.** Both retain 95.1%. The difference between them is not what survives compression, it is whether the result is still English.
 
-| Standard    | Rule breaks per 100 words |
-| ----------- | ------------------------- |
-| ASD-STE100  | 0.10                      |
-| **DTS**     | **0.13**                  |
-| Caveman     | 0.41                      |
-| ELI5        | 0.72                      |
-| No standard | 1.45                      |
+**Concise scores higher than DTS at twice the tokens.** It is the strongest alternative measured and it costs 231 tokens against 118. It runs only in Claude Code, and it stops at the main conversation. DTS installs as a rules block as well as a style, so it also governs every subagent the main agent delegates to.
 
-ASD-STE100 wins this and loses the benchmark. It obeys its own rules slightly better and still scores 17.90 against 18.74. Obedience is not the point.
-
-## Why not just use ASD-STE100
-
-[ASD-STE100](https://asd-ste100.org) is the aerospace writing standard. Its grammar rules are excellent.
-
-Its dictionary is the problem. It bans common verbs, so `check the config` becomes `do a check of the config`.
-
-That costs tokens and strips out the words an engineer needs.
-
-DTS keeps the grammar and drops the dictionary.
-
-Asked to explain a Rust move error, ASD-STE100 produced:
-
-> If you pass a reference, use the ampersand symbol before the variable name.
-
-`the ampersand symbol` instead of `&`, and no code block at all. Correct English, useless to a programmer.
+Method, estimators and limits: [BENCHMARK.md](BENCHMARK.md).
 
 ## The rules
 
 15 rules, in [`rules/dts.md`](rules/dts.md). The full text is in the paste block above.
+
+The layers, and how DTS reaches subagents: [MECHANISM.md](MECHANISM.md).
 
 ## What ships
 
@@ -290,6 +281,9 @@ Asked to explain a Rust move error, ASD-STE100 produced:
 | [`output-styles/dts.md`](output-styles/dts.md) | Chat style, Claude Code only.                          |
 | [`overlays/`](overlays/)                       | Templates for adding your own rules.                   |
 | [`bench/`](bench/)                             | The benchmark, conversational and agentic.             |
+| [MECHANISM.md](MECHANISM.md)                   | How it works, and why the saving varies by model.      |
+| [BENCHMARK.md](BENCHMARK.md)                   | Method, estimators, and what it does not prove.        |
+| [EXAMPLES.md](EXAMPLES.md)                     | Full unedited replies from every standard.             |
 | [`tests/`](tests/)                             | Unit tests. `python3 -m unittest discover -s tests`    |
 
 ## Turning it off, and adding your own rules
@@ -315,72 +309,6 @@ Add your own rules below the DTS block in your memory file. The installer never 
 ```
 
 Say which rule you are changing. A silent contradiction reads as a mistake. [`overlays/README.md`](overlays/README.md) walks through it.
-
-## Running the benchmark
-
-Python 3.11 or newer. Nothing to install.
-
-```sh
-cd bench
-./providers.py       # which models you can reach
-./bench.py --list    # arms, models, and the 32 prompts
-./runall.sh --dry    # show the plan
-./runall.sh          # run it
-```
-
-The agent-loop benchmark runs a headless Claude Code session per trial against a pinned real repository, and installs each arm the way you would, as a project memory file.
-
-```sh
-./agentic.py --list
-./agentic.py --arms baseline dts --reps 4 --model haiku
-```
-
-Models are written `provider:model`:
-
-```sh
-./bench.py --model ollama:kimi-k3:cloud --cats debug --reps 3 --out out/x.json
-./judge.py out/x.json --judge-model anthropic:claude-sonnet-5
-./report.py out/x-judged.json --by-cat
-./lint.py --results out/x.json
-```
-
-Providers live in [`bench/config.toml`](bench/config.toml). Three protocols cover almost everything.
-
-| Protocol    | Reaches                                                       |
-| ----------- | ------------------------------------------------------------- |
-| `ollama`    | local and Ollama Cloud                                        |
-| `openai`    | OpenAI, DeepSeek, Groq, Together, OpenRouter, vLLM, LM Studio |
-| `anthropic` | Claude                                                        |
-
-Adding a provider is a config entry, never a code change. Keys come from environment variables, never from the file.
-
-**Claude Code users need no API key.** The `claude` provider runs your local CLI against your subscription.
-
-## How quality is measured
-
-Saving tokens proves nothing on its own. An empty answer saves 100%.
-
-So four things are measured together.
-
-| Measure            | Catches                                                        |
-| ------------------ | -------------------------------------------------------------- |
-| Output tokens      | What it cost                                                   |
-| Fact coverage      | Whether the needed content survived                            |
-| A judge, on 4 axes | correct, complete, usable, english                             |
-| Lint               | Whether the rules were followed, or the agent just got shorter |
-
-The `english` axis matters most. Every ratio metric favours telegraphic output until you check whether it is still a sentence.
-
-No model ever grades its own writing, and two judges score every answer.
-
-## What this does not prove
-
-- Savings depend on your model and your harness, not on the standard alone. Treat every number here as one setup measured once, and run the benchmark on yours.
-- One writer model was compared across all arms, plus two Claude Opus setups measured separately. Three setups cannot predict a fourth.
-- The agent-loop numbers are one model on one repository across 8 prose-heavy tasks. No judge scored those answers, so they are shorter by measurement and equally correct only by task completion.
-- The judges are language models, told that length is not quality. They are not people, and two of them agree exactly on 39% of answers. Gaps under about half a point are noise, which is why every comparison above carries an interval.
-- The lint is regular expressions. It cannot see passive voice or parts of speech, so it undercounts.
-- Raw answers are not committed. `out/` stays out of the repo, so these tables cannot be audited without rerunning against the same model version.
 
 ## License
 

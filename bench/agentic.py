@@ -13,7 +13,8 @@ file, so the always-on input cost is measured too and not assumed away.
 
 Usage:
   ./agentic.py --list
-  ./agentic.py --arms baseline dts --reps 2 --model haiku
+  ./agentic.py --arms baseline dts --reps 2              # Opus 5, the default
+  ./agentic.py --arms baseline dts --model haiku         # cheaper, different model
   ./agentic.py --ids ag01 ag03 --arms baseline dts --out out/ag.json
 """
 import argparse
@@ -123,7 +124,9 @@ def main():
     ap.add_argument("--cats", nargs="+", help="run only these categories")
     ap.add_argument("--reps", type=int, default=1)
     ap.add_argument("--jobs", type=int, default=2)
-    ap.add_argument("--model", default="haiku")
+    # Opus is the default because Opus verbosity is the complaint this measures.
+    # A cheaper model answers a different question. Pass --model to change it.
+    ap.add_argument("--model", default="opus")
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--tasks", default="agentic-tasks.json")
     ap.add_argument("--cache", default=os.path.join(ROOT, "out", "fixture"))

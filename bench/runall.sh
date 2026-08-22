@@ -17,10 +17,12 @@ JOBS="${JOBS:-3}"
 STAMP="${STAMP:-$(date +%Y%m%d-%H%M)}"
 DIR="out/run-$STAMP"
 
+# Keep this in step with bench.models in config.toml. kimi-k3 is left out on
+# purpose: it is the costliest model here and drains the shared session quota.
 MODELS=(
   ollama:glm-5.2:cloud
   ollama:deepseek-v4-pro:cloud
-  ollama:kimi-k3:cloud
+  ollama:minimax-m3:cloud
 )
 
 short() { echo "$1" | sed 's|.*:||; s|^|x|' | sed 's|^x||' ; }

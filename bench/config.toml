@@ -42,10 +42,13 @@ api_key_env = "GROQ_API_KEY"
 
 [bench]
 # Models the bench writes answers with. Each is a full provider:model spec.
+# kimi-k3 is deliberately absent. It is the costliest model on this account and
+# burns the shared session quota that every other run needs. Add it back only for
+# a deliberate one-off, never as a default judge.
 models = [
   "ollama:glm-5.2:cloud",
   "ollama:deepseek-v4-pro:cloud",
-  "ollama:kimi-k3:cloud",
+  "ollama:minimax-m3:cloud",
 ]
 
 # Writing standards to compare. Each name maps to arms/<name>.txt.
@@ -58,10 +61,22 @@ axes = ["correct", "complete", "usable", "english"]
 
 # Judges score answers. Keep at least one judge that did not write the answers,
 # or self-preference bias inflates the writing model's own scores.
+#
+# Order matters: judge.py takes the first entry when --judge-model is absent, so
+# the cheapest usable judge goes first. kimi-k3 sat here and quietly became the
+# default judge on every run, which drained the shared session quota.
 models = [
-  "ollama:kimi-k3:cloud",
   "ollama:deepseek-v4-pro:cloud",
+  "ollama:glm-5.2:cloud",
 ]
+
+# Never judge with Opus. Opus is the model under test here, so scoring its own
+# arms with it confounds the result, and it is the most expensive way to grade.
+# When the writer is one of the two judges above, swap that one for
+# `claude:sonnet`, which is cheap and does not write any arm.
+#
+# Not minimax-m3: through the ollama API it leaks the answer into the `thinking`
+# field and leaves `content` empty, so a judge call returns nothing to parse.
 
 [run]
 temperature = 0.2

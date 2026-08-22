@@ -193,6 +193,23 @@ class TestLint(unittest.TestCase):
             self.kinds("Write `check`, never verify, confirm, or validate."),
             set())
 
+    def test_nested_fences_do_not_swallow_the_document(self):
+        """A four-backtick fence closes on four, never on the inner three.
+
+        The old pattern paired the outer opening with the inner closing and
+        dropped most of a file from the count, so the linter passed a document
+        it had never read.
+        """
+        doc = ("Alpha beta gamma.\n\n````markdown\n```\ninner\n```\n````\n\n"
+               "Delta epsilon zeta eta.")
+        _counts, words, _hits = lint.lint(doc)
+        self.assertEqual(words, 7, "fenced content leaked or prose was dropped")
+
+    def test_plain_fence_still_exempt(self):
+        _counts, words, _hits = lint.lint(
+            "Alpha beta gamma.\n\n```\ncode here\n```\n\nDelta epsilon zeta eta.")
+        self.assertEqual(words, 7)
+
     def test_code_fence_content_is_exempt(self):
         self.assertEqual(
             self.kinds("Run it.\n\n```py\n# this should be robust\n```\n"),
@@ -269,6 +286,41 @@ class TestAgenticTasks(unittest.TestCase):
         spec.loader.exec_module(m)
         self.assertEqual(len(m.COMMIT), 40, "fixture commit must be a full sha")
         self.assertTrue(m.REPO.startswith("https://"))
+
+
+class TestLinkChecker(unittest.TestCase):
+    """A nested fence must not desync the scanner and expose code as prose."""
+
+    def check(self, text):
+        import importlib.util, tempfile, os
+        spec = importlib.util.spec_from_file_location(
+            "links", os.path.join(ROOT, "tools", "links.py"))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as f:
+            f.write(text); path = f.name
+        try:
+            return m.check(path)
+        finally:
+            os.unlink(path)
+
+    def test_code_inside_a_nested_fence_is_not_read_as_a_link(self):
+        doc = ("````markdown\n```python\nfield = parts[1]\n```\n````\n"
+               "\nPlain prose after.\n")
+        _total, problems = self.check(doc)
+        self.assertEqual(problems, [], "an inner fence closed the outer one")
+
+    def test_inline_code_is_not_read_as_a_link(self):
+        _total, problems = self.check("Use `parts[1]` to get the field.\n")
+        self.assertEqual(problems, [])
+
+    def test_a_genuinely_broken_link_is_still_caught(self):
+        _total, problems = self.check("see [x](definitely-missing-file.md)\n")
+        self.assertTrue(problems, "a missing target must be reported")
+
+    def test_malformed_link_syntax_is_still_caught(self):
+        _total, problems = self.check("see [LICENSE[LICENSE]\n")
+        self.assertTrue(problems, "lost parentheses must be reported")
 
 
 class TestArms(unittest.TestCase):

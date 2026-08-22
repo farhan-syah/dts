@@ -85,7 +85,11 @@ SKIP_MARK = re.compile(r"<!--\s*dts:\s*(?:no-lint|off)\s*-->")
 CORE_MARK = re.compile(r"<!--\s*dts:\s*core\s*-->")
 # Rules that are tuned for the terminal and break long-form genres.
 AGENT_SURFACE = {"modal", "long-sentence", "long-list", "preamble"}
-FENCE = re.compile(r"```.*?```", re.S)
+# A closing fence must be at least as long as the one that opened it.
+# `\x60\x60\x60.*?\x60\x60\x60` non-greedy paired an outer four-backtick fence with
+# an inner three-backtick one, mis-split the rest of the file, and silently
+# dropped most of a document from the count.
+FENCE = re.compile(r"^(`{3,})[^\n]*\n.*?^\1`*[ \t]*$", re.S | re.M)
 INLINE = re.compile(r"`[^`]*`")
 QUOTED = re.compile(r"\"[^\"\n]{0,200}\"")
 

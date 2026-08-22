@@ -15,7 +15,7 @@ Three wire protocols cover the field:
 
 Run this file directly to check which providers are reachable:
   ./providers.py
-  ./providers.py --probe ollama:glm-5.2:cloud anthropic:claude-sonnet-5
+  ./providers.py --probe claude:opus ollama:deepseek-v4-pro:cloud
 """
 import json, os, shutil, subprocess, sys, time, tomllib, urllib.error, urllib.request
 
@@ -35,14 +35,18 @@ class QuotaError(ProviderError):
 
 
 class Result:
-    __slots__ = ("text", "in_tok", "out_tok", "spec", "raw")
+    # `deterministic` is False when the provider ignored the seed. The bench
+    # pairs arms by seed, so a result without one cannot be compared cell by
+    # cell, only in aggregate over reps.
+    __slots__ = ("text", "in_tok", "out_tok", "spec", "raw", "deterministic")
 
-    def __init__(self, text, in_tok, out_tok, spec, raw):
+    def __init__(self, text, in_tok, out_tok, spec, raw, deterministic=True):
         self.text = text
         self.in_tok = in_tok
         self.out_tok = out_tok
         self.spec = spec
         self.raw = raw
+        self.deterministic = deterministic
 
     def usage(self):
         """Small dict worth persisting. The full raw reply is too large to store.
@@ -139,8 +143,18 @@ def _build(kind, base, key, model, system, user, seed, temp, max_tokens):
 
 def _parse(kind, d):
     if kind == "ollama":
-        return (d.get("message", {}).get("content", ""),
-                d.get("prompt_eval_count"), d.get("eval_count"))
+        m = d.get("message", {})
+        txt = m.get("content", "")
+        # Some reasoning models ignore think:false and emit into `thinking`
+        # first. With a small token budget the budget is spent before any
+        # content appears, and the reply looks empty for no visible reason.
+        if not txt and m.get("thinking"):
+            raise RuntimeError(
+                f"model returned only reasoning, no answer "
+                f"({len(m['thinking'])} chars of thinking, "
+                f"stopped on {d.get('done_reason')!r}). "
+                f"Raise max_tokens, or judge with a non-reasoning model.")
+        return (txt, d.get("prompt_eval_count"), d.get("eval_count"))
     if kind == "openai":
         ch = d.get("choices") or []
         txt = ch[0].get("message", {}).get("content", "") if ch else ""
@@ -159,10 +173,15 @@ def isolated_home(root):
     is replaced, so a bare run would inject DTS into every arm and measure
     nothing. This links credentials and settings, and supplies an empty memory
     file in their place.
+
+    It also creates an empty `work/` directory. The CLI is an agent: run it
+    inside this repository and it reads the standard's own files, so a baseline
+    answer starts explaining "the DTS error shape". Neutral cwd, or no baseline.
     """
     home = os.path.abspath(root)
     cdir = os.path.join(home, ".claude")
     os.makedirs(cdir, exist_ok=True)
+    os.makedirs(os.path.join(home, "work"), exist_ok=True)
     real = os.path.expanduser("~/.claude")
     for name in (".credentials.json", "settings.json"):
         src, dst = os.path.join(real, name), os.path.join(cdir, name)
@@ -175,6 +194,14 @@ def isolated_home(root):
 
 
 def _claude_cli(p, model, system, user, timeout, max_tokens):
+    """Run the local Claude CLI.
+
+    The CLI exposes no seed and no temperature, so this path is NOT
+    reproducible. Every other provider pins both, and the bench pairs arms by
+    giving them the same seed for the same prompt and rep. Here two runs of one
+    cell can differ by several times in length, so read medians over many reps
+    and never a single cell. `deterministic` on the Reply records this.
+    """
     exe = p.get("command", "claude")
     if not shutil.which(exe):
         raise ProviderError(f"{exe} is not on PATH")
@@ -192,8 +219,10 @@ def _claude_cli(p, model, system, user, timeout, max_tokens):
         cmd += ["--exclude-dynamic-system-prompt-sections"]
     elif system.strip():
         cmd += ["--append-system-prompt", system]
+    # Neutral working directory, so no arm can read the repository under test.
+    work = os.path.join(env["HOME"], "work") if home else None
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
-                       env=env, stdin=subprocess.DEVNULL)
+                       env=env, cwd=work, stdin=subprocess.DEVNULL)
     if r.returncode != 0:
         tail = (r.stderr or r.stdout)[-400:]
         if "usage limit" in tail.lower() or "rate limit" in tail.lower():
@@ -226,7 +255,8 @@ def complete(spec, system, user, *, cfg=None, seed=0, temperature=0.2,
                     p, model, system, user, timeout, max_tokens)
                 if not (txt or "").strip():
                     raise ProviderError(f"{spec}: empty completion")
-                return Result(txt, itok, otok, spec, raw)
+                # The CLI takes no seed, so this cell is not reproducible.
+                return Result(txt, itok, otok, spec, raw, deterministic=False)
             except QuotaError:
                 raise
             except Exception as e:
@@ -297,7 +327,7 @@ def main():
     for s in specs:
         try:
             r = complete(s, "", "Reply with the single word: ok",
-                         cfg=cfg, max_tokens=32, timeout=90, retries=1)
+                         cfg=cfg, max_tokens=512, timeout=90, retries=1)
             print(f"  OK   {s:<30}{r.out_tok} out tok  {r.text.strip()[:20]!r}")
         except ProviderError as e:
             bad += 1

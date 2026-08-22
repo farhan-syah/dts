@@ -17,7 +17,13 @@ Usage:
 """
 import os, re, sys
 
-FENCE = re.compile(r"^\s*(```|~~~)")
+# Capture the whole run: a fence closes only on one at least as long as the
+# opener. Matching a bare ``` let an inner ```python close an outer ````markdown,
+# after which 57 lines of Python were scanned as prose and reported as links.
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+# An inline code span is code, not prose. `s.split(',')[1]` is a subscript, and
+# reading it as a malformed link reported nine failures on a file with none.
+CODESPAN = re.compile(r"`[^`]*`")
 LINK = re.compile(r"\[([^\]^]*?)\]\(([^)]*)\)")
 # `text[target]` — a link whose parentheses were lost.
 LOST_PARENS = re.compile(r"(?<![\[\s!])\w\[[^\]\n]+\](?!\()")
@@ -35,10 +41,15 @@ def check(path):
     for n, line in enumerate(open(path, encoding="utf-8"), 1):
         m = FENCE.match(line)
         if m:
-            fence = None if fence else m.group(1)
+            mark = m.group(1)
+            if fence is None:
+                fence = mark
+            elif mark[0] == fence[0] and len(mark) >= len(fence):
+                fence = None
             continue
         if fence:
             continue
+        line = CODESPAN.sub(" ", line)
 
         for pat, why in ((LOST_PARENS, "lost parentheses"),
                          (SPLIT, "space between ] and ("),

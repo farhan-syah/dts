@@ -9,9 +9,9 @@ Models are `provider:model` specs resolved through config.toml. Run
 `./providers.py` to see which providers are reachable.
 
 Usage:
+  ./bench.py --model claude:opus --arms baseline dts    # Opus 5, no API key
+  ./bench.py --model ollama:deepseek-v4-pro:cloud --reps 3 --out out/ds.json
   ./bench.py                                     # first bench.models, all arms
-  ./bench.py --model ollama:kimi-k3:cloud --reps 3 --out out/kimi.json
-  ./bench.py --model anthropic:claude-sonnet-5 --arms baseline dts
   ./bench.py --ids enum01 des02 --arms baseline dts   # one cluster
 """
 import argparse, json, os, re, sys, time
@@ -41,7 +41,9 @@ def run_cell(args, cfg, arm, sys_prompt, p, rep):
         return {"arm": arm, "id": p["id"], "cat": p["cat"], "rep": rep,
                 "model": args.model, "error": str(e)}
     got, tot, missing = coverage(r.text, p["must"])
+    extra = {} if getattr(r, "deterministic", True) else {"unseeded": True}
     return {
+        **extra,
         "arm": arm, "id": p["id"], "cat": p["cat"], "rep": rep,
         "model": args.model,
         "out_tok": r.out_tok, "in_tok": r.in_tok,
