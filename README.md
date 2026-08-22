@@ -65,6 +65,8 @@ cd dts
 
 It finds every agent on your PATH and installs into each.
 
+It writes to each agent's global file, so DTS applies in every project.
+
 | Agent       | Skill | Rules | Output style |
 | ----------- | ----- | ----- | ------------ |
 | Claude Code | yes   | yes   | yes          |
@@ -72,6 +74,9 @@ It finds every agent on your PATH and installs into each.
 | opencode    | yes   | yes   | —            |
 | pi          | yes   | yes   | —            |
 | Gemini CLI  | —     | yes   | —            |
+| Copilot CLI | —     | yes   | —            |
+| Amp         | —     | yes   | —            |
+| Kiro        | —     | yes   | —            |
 
 On Claude Code, turn on the output style: `/config`, then Output style, then DTS.
 
@@ -81,6 +86,31 @@ On Claude Code, turn on the output style: `/config`, then Output style, then DTS
 ./install.sh --only codex  # one agent
 ./install.sh --uninstall   # remove it cleanly
 ```
+
+### Editors that read rules from the repo
+
+Cursor, Windsurf, Cline, Qoder and Kiro keep their rules inside the project. Zed, Amp, Jules, Junie, Antigravity and CodeWhale read `AGENTS.md` from the repo root.
+
+```sh
+./install.sh --project           # write into the current repo
+./install.sh --project ~/code/x  # or another one
+./install.sh --project --all     # every target, not only the ones detected
+```
+
+It writes `AGENTS.md` always, and a rule file for each editor the repo already uses:
+
+| Editor   | File                              |
+| -------- | --------------------------------- |
+| Cursor   | `.cursor/rules/dts.mdc`           |
+| Windsurf | `.windsurf/rules/dts.md`          |
+| Cline    | `.clinerules/dts.md`              |
+| Qoder    | `.qoder/rules/dts.md`             |
+| Kiro     | `.kiro/steering/dts.md`           |
+| Copilot  | `.github/copilot-instructions.md` |
+
+Without `--all` it skips any editor whose directory is absent, so a repo does not collect rule files for editors nobody there runs. The Cursor file gets `alwaysApply: true` so it loads unprompted.
+
+DTS is plain text with no runtime. That is why one file covers every agent above, and why nothing here needs Node, a plugin host, or a hook.
 
 **Your memory file is safe.** The rules go between `<!-- dts:start -->` and `<!-- dts:end -->`. Nothing outside those markers is read or changed, so your own notes survive every reinstall.
 
@@ -98,7 +128,6 @@ If your agent is not in the table, it almost certainly reads a global instructio
 
 ```markdown
 <!-- dts:start -->
-
 ## Output Standard (DTS 1.0)
 
 Governs every English word this agent writes for engineers and agents: replies in conversation, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.

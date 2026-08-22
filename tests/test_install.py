@@ -208,6 +208,118 @@ class TestHostilePaths(Base):
                 self.assertIn(BEGIN, f.read(), f"failed for {name!r}")
 
 
+class TestProjectMode(unittest.TestCase):
+    """--project writes rule files for editor agents that read from the repo."""
+
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.proj = self.dir.name
+        self.addCleanup(self.dir.cleanup)
+
+    def install(self, *args):
+        return subprocess.run(
+            [os.path.join(ROOT, "install.sh"), "--project", self.proj, *args],
+            capture_output=True, text=True, cwd=ROOT)
+
+    def files(self):
+        out = set()
+        for root, _dirs, names in os.walk(self.proj):
+            for n in names:
+                out.add(os.path.relpath(os.path.join(root, n), self.proj))
+        return out
+
+    def read(self, rel):
+        with open(os.path.join(self.proj, rel)) as f:
+            return f.read()
+
+    def test_agents_md_is_always_written(self):
+        r = self.install()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("AGENTS.md", self.files())
+        self.assertIn(BEGIN, self.read("AGENTS.md"))
+
+    def test_undetected_agents_are_skipped(self):
+        self.install()
+        self.assertNotIn(".cursor/rules/dts.mdc", self.files())
+        self.assertNotIn(".clinerules/dts.md", self.files())
+
+    def test_marker_directory_triggers_its_target(self):
+        os.makedirs(os.path.join(self.proj, ".cursor"))
+        self.install()
+        self.assertIn(".cursor/rules/dts.mdc", self.files())
+
+    def test_all_forces_every_target(self):
+        self.install("--all")
+        for rel in (".cursor/rules/dts.mdc", ".windsurf/rules/dts.md",
+                    ".clinerules/dts.md", ".qoder/rules/dts.md",
+                    ".kiro/steering/dts.md", ".github/copilot-instructions.md",
+                    "AGENTS.md"):
+            self.assertIn(rel, self.files(), rel)
+
+    def test_cursor_file_gets_front_matter(self):
+        self.install("--all")
+        head = self.read(".cursor/rules/dts.mdc").splitlines()[:4]
+        self.assertEqual(head[0], "---")
+        self.assertIn("alwaysApply: true", head)
+
+    def test_reinstall_keeps_front_matter_and_does_not_duplicate(self):
+        self.install("--all")
+        self.install("--all")
+        body = self.read(".cursor/rules/dts.mdc")
+        self.assertEqual(body.count(BEGIN), 1)
+        self.assertIn("alwaysApply: true", body)
+
+    def test_existing_project_text_survives(self):
+        os.makedirs(os.path.join(self.proj, ".github"))
+        with open(os.path.join(self.proj, ".github",
+                               "copilot-instructions.md"), "w") as f:
+            f.write("# House rules\n\nAlways rebase.\n")
+        self.install()
+        body = self.read(".github/copilot-instructions.md")
+        self.assertIn("Always rebase.", body)
+        self.assertIn(BEGIN, body)
+
+    def test_uninstall_removes_blocks_and_keeps_user_text(self):
+        os.makedirs(os.path.join(self.proj, ".github"))
+        with open(os.path.join(self.proj, ".github",
+                               "copilot-instructions.md"), "w") as f:
+            f.write("# House rules\n\nAlways rebase.\n")
+        self.install()
+        self.install("--uninstall")
+        body = self.read(".github/copilot-instructions.md")
+        self.assertNotIn(BEGIN, body)
+        self.assertIn("Always rebase.", body)
+        self.assertNotIn(BEGIN, self.read("AGENTS.md"))
+
+    def test_dry_run_writes_nothing(self):
+        os.makedirs(os.path.join(self.proj, ".cursor"))
+        before = self.files()
+        r = self.install("--dry-run")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(before, self.files())
+
+    def test_only_restricts_to_one_target(self):
+        self.install("--all", "--only", "cline")
+        f = self.files()
+        self.assertIn(".clinerules/dts.md", f)
+        self.assertNotIn(".cursor/rules/dts.mdc", f)
+        self.assertNotIn("AGENTS.md", f)
+
+    def test_missing_directory_exits_nonzero(self):
+        r = subprocess.run(
+            [os.path.join(ROOT, "install.sh"), "--project",
+             os.path.join(self.proj, "nope")],
+            capture_output=True, text=True, cwd=ROOT)
+        self.assertNotEqual(r.returncode, 0)
+
+    def test_every_written_file_carries_the_shipped_rules(self):
+        self.install("--all")
+        with open(os.path.join(ROOT, "rules", "dts.md")) as f:
+            first = next(l for l in f if l.startswith("- "))
+        for rel in self.files():
+            self.assertIn(first.strip(), self.read(rel), rel)
+
+
 class TestShippedRules(unittest.TestCase):
     def test_shipped_rules_file_installs(self):
         rules = os.path.join(ROOT, "rules", "dts.md")

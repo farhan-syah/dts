@@ -48,7 +48,7 @@ Extend rather than replace. The rule is that the word is assigned, not which wor
 
 Two files are meant to be edited in your copy, and editing them is not a fork:
 
-- The **canonical-word table** in `skills/dts/references/wordlist.md`. A team that writes `folder` rather than `directory` changes that row.
+- The **canonical-word table** in [`skills/dts/references/wordlist.md`](../skills/dts/references/wordlist.md). A team that writes `folder` rather than `directory` changes that row.
 - The **kill-list** in the same file. Add the filler your field overuses. Remove a word your field needs — `significant` is filler in a README and a term of art in statistics.
 
 Leave the sentence caps and the modal list alone. Use a per-file marker instead. A standard bent per document is not a standard.
