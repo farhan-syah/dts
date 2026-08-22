@@ -5,7 +5,7 @@ license: MIT
 compatibility: claude-code codex opencode pi gemini-cli
 metadata:
   standard: DTS
-  spec_version: "1.0"
+  spec_version: "0.1"
 ---
 
 # DTS — Dense Technical Syntax
