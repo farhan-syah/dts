@@ -375,5 +375,36 @@ class TestShippedRules(unittest.TestCase):
                               f"README paste block is stale, missing: {line[:60]!r}")
 
 
+class TestReadmeSyncTolerance(unittest.TestCase):
+    """A format-on-save pass reflows the fenced copy. That is not drift.
+
+    Prettier inserts a blank line after `<!-- dts:start -->` inside the fence.
+    A byte-exact guard fails on it, the whole test matrix goes red, and the
+    next save undoes any fix.
+    """
+
+    def sync(self):
+        import importlib.util
+        path = os.path.join(ROOT, "tools", "sync-readme.py")
+        spec = importlib.util.spec_from_file_location("sync_readme", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_layout_changes_are_not_drift(self):
+        m = self.sync()
+        plain = "<!-- dts:start -->\n## Title\n\n- One rule.\n"
+        formatted = "<!-- dts:start -->\n\n## Title\n\n- One rule.   \n\n"
+        self.assertEqual(m.norm(plain), m.norm(formatted))
+
+    def test_content_changes_are_drift(self):
+        m = self.sync()
+        base = "<!-- dts:start -->\n- One rule.\n"
+        for changed in ("<!-- dts:start -->\n- One rules.\n",
+                        "<!-- dts:start -->\n- One rule.\n- Two rules.\n",
+                        "<!-- dts:start -->\n"):
+            self.assertNotEqual(m.norm(base), m.norm(changed), changed)
+
+
 if __name__ == "__main__":
     unittest.main()

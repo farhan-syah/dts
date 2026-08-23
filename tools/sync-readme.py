@@ -17,6 +17,13 @@ START = "<!-- dts:readme-start -->"
 END = "<!-- dts:readme-end -->"
 
 
+def norm(text):
+    """Content lines only. A markdown formatter reflows blank lines and pads
+    table columns inside the fence, and neither is drift. Rewriting the block
+    over a formatter's layout only starts a fight the formatter always wins."""
+    return [l.rstrip() for l in text.splitlines() if l.strip()]
+
+
 def build():
     rules = open(os.path.join(ROOT, "rules/dts.md")).read().strip()
     return (f"{START}\n\n```markdown\n<!-- dts:start -->\n{rules}\n"
@@ -32,7 +39,7 @@ def main():
     if not pat.search(s):
         sys.exit(f"markers {START} / {END} not found in README.md")
     new = pat.sub(lambda _: want, s, count=1)
-    if new == s:
+    if norm(new) == norm(s):
         print("README block matches rules/dts.md")
         return
     if check:
