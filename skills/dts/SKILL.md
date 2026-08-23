@@ -29,15 +29,19 @@ Never re-output unchanged code to confirm a change.
 
 ## Routing
 
-| Need                                                                                       | Read                                                 |
-| ------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| Full rule set, sentence caps, locked verbs, condition-before-command                       | [`references/grammar.md`](references/grammar.md)     |
-| Kill-list, hedge collapses, synonym-to-canonical map                                       | [`references/wordlist.md`](references/wordlist.md)   |
-| Per-target shapes: commit, PR, README, comment, error, CLI help, agent prompt, JSON schema | [`references/artifacts.md`](references/artifacts.md) |
-| Grep patterns and the mandatory self-audit                                                 | [`references/check.md`](references/check.md)         |
-| Genre limits, per-file overrides, precedence, extending the canon                          | [`references/scope.md`](references/scope.md)         |
+Each row fires on what you are about to do. Read the file first, then write. A row that does not fire costs nothing.
 
-For an unrecognized request, read [`references/grammar.md`](references/grammar.md) and apply it.
+| Trigger                                                                                          | Read                                                 |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| You are rewriting a whole document, or a passage the six rules above do not settle               | [`references/grammar.md`](references/grammar.md)     |
+| You are cutting a word, collapsing a hedge, or picking between synonyms                          | [`references/wordlist.md`](references/wordlist.md)   |
+| The target has a fixed shape: commit, PR, README, comment, error, CLI help, agent prompt, schema | [`references/artifacts.md`](references/artifacts.md) |
+| You are about to deliver a persisted file                                                        | [`references/check.md`](references/check.md)         |
+| The genre is out of scope, an overlay contradicts a rule, or the file opts out of DTS            | [`references/scope.md`](references/scope.md)         |
+
+Two triggers can fire at once. Read both files.
+
+An unrecognized request fires no row. Read [`references/grammar.md`](references/grammar.md) and apply it.
 
 ## Stop conditions
 
@@ -51,7 +55,7 @@ Do not apply DTS to any of these. Apply the operator's own handler instead, and 
 
 DTS names no replacement, so read the operator's overlay to learn which handler owns the genre. When a prose skill and DTS both match, the prose skill wins for its language or genre.
 
-Honor a per-file marker over every rule above. `<!-- dts:core -->` keeps the genre-neutral core and drops the caps, the modal limit, and the bullets rule. `<!-- dts:off -->` disables the standard for that file. [`references/scope.md`](references/scope.md) carries the layer model.
+A file can opt out of DTS, or keep the core and drop the terminal-tuned rules. The markers, the layer model, and precedence live in [`references/scope.md`](references/scope.md).
 
 ## Boundary
 

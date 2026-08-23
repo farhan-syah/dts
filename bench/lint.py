@@ -110,7 +110,10 @@ RULES = [
     ("trailing-offer", TRAILING),
 ]
 
-PROHIBIT = re.compile(r"\bnever\b|\binstead of\b|\bbanned\b|\brather than\b|"
+# Rules whose job is to name the words they ban. On a prohibition line the
+# named word is a definition, not a use.
+DICTIONARY = {"kill-word", "dead-phrase", "wordy"}
+PROHIBIT = re.compile(r"\bnever\b|\binstead of\b|\bban(?:s|ned)?\b|\brather than\b|"
                       r"\bdo not (?:use|write|say)\b|\bnot\s+[\w`]+\s*[,/]", re.I)
 SKIP_MARK = re.compile(r"<!--\s*dts:\s*(?:no-lint|off)\s*-->")
 CORE_MARK = re.compile(r"<!--\s*dts:\s*core\s*-->")
@@ -122,6 +125,8 @@ AGENT_SURFACE = {"modal", "long-sentence", "long-list", "preamble"}
 # dropped most of a document from the count.
 FENCE = re.compile(r"^(`{3,})[^\n]*\n.*?^\1`*[ \t]*$", re.S | re.M)
 INLINE = re.compile(r"`[^`]*`")
+# YAML frontmatter: a name, a description, and routing metadata. Not prose.
+FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.S)
 QUOTED = re.compile(r"\"[^\"\n]{0,200}\"")
 
 
@@ -129,7 +134,8 @@ def strip_exempt(text):
     """Blank out spans a standard must never rewrite, keeping offsets stable."""
     def blank(m):
         return " " * (m.end() - m.start())
-    t = FENCE.sub(blank, text)
+    t = FRONTMATTER.sub(blank, text)
+    t = FENCE.sub(blank, t)
     t = INLINE.sub(blank, t)
     return QUOTED.sub(blank, t)
 
@@ -155,12 +161,25 @@ def lint(text, cap=20, row_cap=10):
     words = len(clean.split())
     v, detail = Counter(), []
 
+    lines = clean.splitlines()
+    prohibits = {i for i, l in enumerate(lines) if PROHIBIT.search(l)}
+
+    def line_at(src, pos):
+        return src.count("\n", 0, pos)
+
     for name, pat in RULES:
         for m in re.finditer(pat, clean, re.I):
+            if name in DICTIONARY and line_at(clean, m.start()) in prohibits:
+                continue
             v[name] += 1
             detail.append((name, m.group(0).strip()[:60]))
 
+    fences = [(m.start(), m.end()) for m in FENCE.finditer(text)]
+    cited = [(m.start(), m.end()) for m in INLINE.finditer(text)
+             if not any(a <= m.start() < b for a, b in fences)]
     for m in ELISION.finditer(text):
+        if any(a <= m.start() < b for a, b in cited):
+            continue
         v["code-elision"] += 1
         detail.append(("code-elision", m.group(0).strip()[:60]))
 

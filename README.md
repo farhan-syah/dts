@@ -28,13 +28,16 @@ Agent output has grown more verbose with each model generation. The available re
 
 ```markdown
 <!-- dts:start -->
+
 ## Output Standard (DTS 0.1)
 
-Governs every English word this agent writes for engineers and agents: replies in conversation, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.
+Governs every English word this agent writes for engineers and agents.
 
-Out of scope: any other language, fiction, persuasive or brand copy, and long-form argument such as a thesis, paper, essay, or legal text, where hedging and long linked sentences are part of the job. An overlay below this block says which of your own rules covers those.
+In scope: replies, docs, code comments, commit and PR bodies, checklists, error strings, CLI help, tool descriptions, and agent prompts.
 
-Override, per file: `<!-- dts:core -->` keeps the core and drops the sentence caps, the modal limit, and the bullets rule. `<!-- dts:off -->` disables everything. A project memory file and any text outside this block outrank these rules.
+Out of scope: any other language, fiction, persuasive or brand copy, and long-form argument. A thesis, paper, essay, or legal text needs hedging and long linked sentences. For those, use the handler named in the overlay below.
+
+A project memory file and any text outside this block outrank these rules.
 
 - Compression removes filler, never content. Every fact the reader needs to act survives. When keeping a fact costs another sentence, write the sentence. Being complete is never a reason to hedge. An uncertain fact is stated as unconfirmed, never as `may`.
 - Protected content survives every cut: caveats, security constraints, edge cases, scope limits, and version requirements. These are never filler.
@@ -53,7 +56,7 @@ Override, per file: `<!-- dts:core -->` keeps the core and drops the sentence ca
 - Never re-output unchanged code. Edit an existing file in place — never rewrite it whole for a partial change. Never print back a file you just edited.
 - Brevity governs prose ONLY. Code in an edit must be complete — never `// ... existing code` or a stub placeholder.
 - An artifact with a required shape keeps every part. An error message names what failed, the exact input, and the next action.
-- Full rewrite, audit, or per-artifact shapes: invoke the `dts` skill.
+- Invoke the `dts` skill: full rewrite, audit, fixed-shape artifact, or a file that opts out.
 <!-- dts:end -->
 ```
 
@@ -177,9 +180,9 @@ Per-agent paths, project rules, and the agents that need a manual paste: [INSTAL
 Savings depend on your model and on what you asked. Quality held in both setups.
 
 | Your setup          | Median cut, per prompt | Range across 50 prompts | Cuts output on | Facts kept |
-| ------------------- | ---------- | ----------------------- | -------------- | ---------- |
-| glm-5.2             | **-83%**   | -95% to -36%            | 50 of 50       | 95.1%      |
-| Claude Opus 5, bare | **-10%**   | -49% to **+57%**        | 34 of 50       | **97.7%**  |
+| ------------------- | ---------------------- | ----------------------- | -------------- | ---------- |
+| glm-5.2             | **-83%**               | -95% to -36%            | 50 of 50       | 95.1%      |
+| Claude Opus 5, bare | **-10%**               | -49% to **+57%**        | 34 of 50       | **97.7%**  |
 
 Both rows take the median of the per-prompt change. The comparison table below divides one arm's median by the baseline's, so the two are not the same estimator. Pooled that way, Opus reads -17%.
 

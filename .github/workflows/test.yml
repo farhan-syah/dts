@@ -40,8 +40,13 @@ jobs:
         run: python3 tools/links.py $(git ls-files '*.md')
 
       # The standard has to survive its own audit, or it is advice, not a rule.
+      # The rules block is the one exception to the ten-row cap: 18 rules is the
+      # canon, not a runaway list. Every other check still applies to it, and a
+      # 19th row still fails.
       - name: Shipped prose passes the DTS lint
-        run: python3 bench/lint.py $(git ls-files "*.md")
+        run: |
+          python3 bench/lint.py $(git ls-files "*.md" | grep -v '^rules/dts.md$')
+          python3 bench/lint.py --row-cap 18 rules/dts.md
 
   shell:
     runs-on: ubuntu-latest
