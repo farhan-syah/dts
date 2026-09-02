@@ -34,13 +34,33 @@ grep -nEi '(might|may|could|appears?|seems?)[^.]{0,30}(possibly|potentially|perh
 Flags every sentence over the cap. Skips fenced code blocks and table rows.
 
 ````sh
-awk 'NR==1&&/^---$/{f=1;next} f&&/^---$/{f=0;next} f{next}
-/^```/{c=!c;next} c||/^\|/||/^ *$/{next}
-{gsub(/`[^`]*`/,"X"); n=split($0,s,/[.!?]+[ \t]|[.!?]+$/);
- for(i=1;i<=n;i++){w=split(s[i],t," "); if(w>20) printf "%s:%d: %d words: %s\n",FILENAME,NR,w,s[i]}}' "$F"
+awk -v CAP=20 '
+function flush(  n,i,w,s,t,b) {
+  if (buf == "") return
+  b = buf; buf = ""
+  gsub(/`[^`]*`/, "X", b)
+  n = split(b, s, /[.!?]+[ \t]|[.!?]+$/)
+  for (i = 1; i <= n; i++) {
+    w = split(s[i], t, " ")
+    if (w > CAP) printf "%s:%d: %d words: %s\n", FILENAME, ln, w, s[i]
+  }
+}
+FNR==1 { flush(); fm = 0; c = 0; if ($0 ~ /^---$/) { fm = 1; next } }
+fm && /^---$/ { fm = 0; next }
+fm { next }
+/^```/ { flush(); c = !c; next }
+c { next }
+/^[ \t]*$/ || /^\|/ || /^#/ || /^[ \t]*([-*+]|[0-9]+[.)])[ \t]/ {
+  flush()
+  if ($0 ~ /^[ \t]*([-*+]|[0-9]+[.)])[ \t]/) { ln = FNR; buf = $0 }
+  next
+}
+{ if (buf == "") ln = FNR; buf = (buf == "" ? $0 : buf " " $0) }
+END { flush() }
+' "$F"
 ````
 
-Change `w>20` to `w>15` when auditing directives, subagent prompts, or CLI help.
+Pass `-v CAP=15` when auditing directives, subagent prompts, or CLI help.
 
 ## Pass condition
 
