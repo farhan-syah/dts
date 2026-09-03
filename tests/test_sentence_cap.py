@@ -65,8 +65,46 @@ LIST = """# Heading
 - short item
 """
 
+TILDE_FENCE = """# Heading
+
+~~~sh
+this tilde fenced line is long enough to trip the cap check by a very wide margin indeed
+~~~
+
+Two words.
+"""
+
+INDENTED_FENCE = """# Heading
+
+   ```sh
+   this indented fenced line is long enough to trip the cap check by a very wide margin
+   ```
+
+Two words.
+"""
+
+NESTED_FENCE = """# Heading
+
+````md
+```sh
+this inner fenced line is long enough to trip the cap check by a very wide margin indeed
+```
+````
+
+Two words.
+"""
+
+CODE_BLOCK = """# Heading
+
+    this indented code block line is long enough to trip the cap check by a wide margin
+
+Two words.
+"""
+
 FIXTURES = {"wrapped": WRAPPED, "short": SHORT, "frontmatter": FRONTMATTER,
-            "fence": FENCE, "table": TABLE, "list": LIST}
+            "fence": FENCE, "table": TABLE, "list": LIST,
+            "tilde": TILDE_FENCE, "indented": INDENTED_FENCE,
+            "nested": NESTED_FENCE, "code-block": CODE_BLOCK}
 
 
 def awk_script():
@@ -200,6 +238,45 @@ class TestSkippedBlocks(CapCase):
         hits = run_python([path])
         self.assertEqual(len(hits), 1)
         self.assertTrue(hits[0].startswith(f"{path}:3:"), hits[0])
+
+
+class TestFences(CapCase):
+    """Both fence markers skip their contents, indented up to three spaces."""
+
+    def test_tilde_fence_is_skipped(self):
+        self.assertEqual(run_python([self.write("t.md", TILDE_FENCE)]), [])
+
+    def test_indented_fence_is_skipped(self):
+        self.assertEqual(run_python([self.write("i.md", INDENTED_FENCE)]), [])
+
+    def test_inner_fence_does_not_close_the_outer_one(self):
+        self.assertEqual(run_python([self.write("n.md", NESTED_FENCE)]), [])
+
+    def test_short_fence_does_not_close_a_longer_one(self):
+        text = ("# Heading\n\n````sh\n```\nthis line is long enough to trip"
+                " the cap check by a very wide margin indeed and more\n```\n"
+                "````\n\nTwo words.\n")
+        self.assertEqual(run_python([self.write("s.md", text)]), [])
+
+    def test_tilde_does_not_close_a_backtick_fence(self):
+        text = ("# Heading\n\n```sh\n~~~\nthis line is long enough to trip"
+                " the cap check by a very wide margin indeed and more\n~~~\n"
+                "```\n\nTwo words.\n")
+        self.assertEqual(run_python([self.write("m.md", text)]), [])
+
+    def test_fence_with_an_info_string_does_not_close(self):
+        text = ("# Heading\n\n```\nthis line is long enough to trip the cap"
+                " check by a very wide margin indeed and then more\n```sh\n"
+                "this second line is long enough to trip the cap check by a"
+                " wide margin indeed\n```\n\nTwo words.\n")
+        self.assertEqual(run_python([self.write("info.md", text)]), [])
+
+    def test_four_space_indent_is_content_not_a_fence(self):
+        text = ("# Heading\n\n    ```\nthis paragraph is long enough to trip"
+                " the cap check by a very wide margin indeed and then some"
+                " more words here.\n")
+        hits = run_python([self.write("deep.md", text)])
+        self.assertEqual(len(hits), 1, hits)
 
 
 class TestWordCount(CapCase):

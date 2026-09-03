@@ -2,9 +2,10 @@
 """Flag every sentence over the DTS word cap.
 
 Mirrors the awk in skills/dts/references/check.md, for hosts with no native
-awk. Skips frontmatter, fenced code, headings, and table rows. Scores each
-list item alone. Buffers a wrapped paragraph, so a sentence split over source
-lines is scored whole, and reports the line the paragraph starts on.
+awk. Skips frontmatter, fenced code in either marker, headings, and table
+rows. Scores each list item alone. Buffers a wrapped paragraph, so a sentence
+split over source lines is scored whole, and reports the line the paragraph
+starts on.
 
 Exits non-zero when a sentence is over the cap, so it works as a CI gate. The
 awk exits 0 either way, because a shell audit is read by a person.
@@ -23,6 +24,10 @@ SENTENCE = re.compile(r"[.!?]+[ \t]|[.!?]+$")
 WORD = re.compile(r"[^ \t\n]+")
 LIST_ITEM = re.compile(r"^[ \t]*([-*+]|[0-9]+[.)])[ \t]")
 SKIP = re.compile(r"^[ \t]*$|^\||^#")
+# A fence marker takes up to three spaces of indent, then three or more
+# backticks or tildes. Four spaces make an indented code block, where the
+# marker is content, not a fence.
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 # awk's sub(/\r$/, "") removes one carriage return, never a run of them.
 CR = re.compile(r"\r$")
 
@@ -55,7 +60,8 @@ class Buffer:
 def violations(lines, path, cap):
     """Yield every over-cap sentence in one file's lines."""
     buf = Buffer()
-    frontmatter, fenced = False, False
+    frontmatter = False
+    open_len, open_mark = 0, ""
 
     for number, raw in enumerate(lines, 1):
         line = CR.sub("", raw)
@@ -67,11 +73,20 @@ def violations(lines, path, cap):
             if line == "---":
                 frontmatter = False
             continue
-        if line.startswith("```"):
+
+        marker = FENCE.match(line)
+        if marker:
             yield from buf.flush(cap)
-            fenced = not fenced
+            run, rest = marker.group(1), marker.group(2)
+            if not open_len:
+                open_len, open_mark = len(run), run[0]
+            # A fence closes only on the same character, at least as long,
+            # and bare.
+            elif (run[0] == open_mark and len(run) >= open_len
+                    and not rest.strip()):
+                open_len, open_mark = 0, ""
             continue
-        if fenced:
+        if open_len:
             continue
         if SKIP.search(line) or LIST_ITEM.search(line):
             yield from buf.flush(cap)
